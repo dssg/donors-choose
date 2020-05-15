@@ -1,1 +1,5 @@
 database.yaml
+
+cache/*
+images/*
+.vscode/*
