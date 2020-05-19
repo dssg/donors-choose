@@ -6,7 +6,7 @@
 -- for indexes
 
 DROP TABLE if exists optimized.donations;
-DROP TABLE if exists optimized.projects;
+DROP TABLE if exists optimized.projects CASCADE;
 DROP TABLE if exists optimized.ESSAYS;
 DROP TABLE IF EXISTS optimized.resources;
 DROP TABLE IF EXISTS optimized.outcomes;
@@ -40,7 +40,7 @@ UPDATE optimized.PROJECTS
 	SET projectid_str_short = substring(projectid_str FROM 1 FOR 10);
 
 ALTER TABLE OPTIMIZED.projects
-	ADD COLUMN projectid serial NOT NULL PRIMARY KEY;
+	ADD COLUMN entity_id serial NOT NULL PRIMARY KEY;
 
 -- updating projectid in donations
 ALTER TABLE optimized.donations
@@ -53,10 +53,10 @@ UPDATE optimized.donations
 	SET projectid_str_short = substring(projectid_str FROM 1 FOR 10);
 
 ALTER TABLE optimized.donations
-	ADD COLUMN projectid integer;
+	ADD COLUMN entity_id integer;
 	
 UPDATE optimized.donations
-	SET projectid = projects.projectid
+	SET entity_id = projects.entity_id
 	FROM optimized.PROJECTS 
 	WHERE donations.projectid_str_short = projects.projectid_str_short;
 
@@ -71,12 +71,20 @@ UPDATE optimized.essays
 	SET projectid_str_short = substring(projectid_str FROM 1 FOR 10);
 
 ALTER TABLE optimized.essays
-	ADD COLUMN projectid integer;
+	ADD COLUMN entity_id integer;
 	
 UPDATE optimized.essays
-	SET projectid = projects.projectid
+	SET entity_id = projects.entity_id
 	FROM optimized.PROJECTS 
 	WHERE essays.projectid_str_short = projects.projectid_str_short;
+
+ALTER TABLE optimized.essays
+	ADD COLUMN date_posted timestamp(6);
+
+UPDATE optimized.essays
+	SET date_posted = projects.date_posted
+	FROM optimized.projects
+	WHERE essays.entity_id = projects.entity_id;
 
 -- resources
 ALTER TABLE optimized.resources
@@ -89,12 +97,21 @@ UPDATE optimized.resources
 	SET projectid_str_short = substring(projectid_str FROM 1 FOR 10);
 
 ALTER TABLE optimized.resources
-	ADD COLUMN projectid integer;
+	ADD COLUMN entity_id integer;
 	
 UPDATE optimized.resources
-	SET projectid = projects.projectid
+	SET entity_id = projects.entity_id
 	FROM optimized.PROJECTS 
 	WHERE resources.projectid_str_short = projects.projectid_str_short;
+
+ALTER TABLE optimized.resources
+	ADD COLUMN date_posted timestamp(6);
+
+UPDATE optimized.resources
+	SET date_posted = projects.date_posted
+	FROM optimized.projects
+	WHERE resources.entity_id = projects.entity_id;
+
 
 -- outcomes
 ALTER TABLE optimized.outcomes
@@ -107,10 +124,10 @@ UPDATE optimized.outcomes
 	SET projectid_str_short = substring(projectid_str FROM 1 FOR 10);
 
 ALTER TABLE optimized.outcomes
-	ADD COLUMN projectid integer;
+	ADD COLUMN entity_id integer;
 	
 UPDATE optimized.outcomes
-	SET projectid = projects.projectid
+	SET entity_id = projects.entity_id
 	FROM optimized.PROJECTS 
 	WHERE outcomes.projectid_str_short = projects.projectid_str_short;
 
