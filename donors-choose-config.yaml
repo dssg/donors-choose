@@ -36,7 +36,7 @@ cohort_config:
   query: |
     SELECT distinct(entity_id)
       FROM optimized.projects
-    WHERE date_posted = '{as_of_date}'::date
+    WHERE date_posted = '{as_of_date}'::date - interval '1day'
 
 label_config:
   query: |
@@ -44,8 +44,8 @@ label_config:
             (SELECT projects.entity_id, sum(donation_to_project) as total_donations, 
             total_price_excluding_optional_support AS total_price
             FROM optimized.projects 
-            LEFT JOIN optimized.donations ON donations.projectid = projects.entity_id 
-            WHERE projects.date_posted = '{as_of_date}'::date
+            LEFT JOIN optimized.donations ON donations.entity_id = projects.entity_id
+            WHERE projects.date_posted = '{as_of_date}'::date - interval '1day'
               AND donations.donation_timestamp < (projects.date_posted 
                 + interval '{label_timespan}')
             GROUP BY projects.entity_id, projects.total_price_excluding_optional_support)
@@ -53,7 +53,6 @@ label_config:
         (total_donations >= total_price)::int AS outcome  
         FROM optimized.projects
         LEFT JOIN donation_totals using(entity_id)
-        WHERE date_posted = '{as_of_date}'::date
 
   name: 'quickstart_label'
 
