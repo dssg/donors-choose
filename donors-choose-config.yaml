@@ -17,20 +17,21 @@ temporal_config:
 
     model_update_frequency: '1month'
 
-    # we sample every day, since new projects are posted
-    # every day
-    training_as_of_date_frequencies: ['1day']
 
     # length of time defining a test set
     test_durations: ['1month']
+    # defines how far back a training set reaches
+    max_training_histories: ['1month']
+
+    # we sample every day, since new projects are posted
+    # every day
+    training_as_of_date_frequencies: ['1day']
     test_as_of_date_frequencies: ['1day']
     
     # like our project timeout
     training_label_timespans: ['4month']
     test_label_timespans: ['4month']
     
-    # defines how far back a trainig set reaches
-    max_training_histories: ['1month']
 
 cohort_config:
   query: |
@@ -241,7 +242,6 @@ grid_config:
       strategy: ['prior']
 # model_grid_preset: 'quickstart'
 
-  'sklearn.tree.DecisionTreeClassifier':
 scoring:
     testing_metric_groups:
         -
