@@ -60,20 +60,93 @@ label_config:
 
 feature_aggregations:
   -
-    prefix: 'basic_features'
+    prefix: 'project_features'
     from_obj: 'optimized.projects'
     knowledge_date_column: 'date_posted'
+
+    aggregates_imputation:
+      all:
+        type: 'zero'
 
     categoricals_imputation:
       all:
         type: 'null_category'          
 
     categoricals:
-      - # test feature
-        column: 'school_charter'
+      -
+        column: 'school_metro'
+        metrics:
+          - 'sum' 
+        choice_query: 'select distinct school_metro from optimized.projects'
+      -
+        column: 'resource_type'
+        metrics:
+          - 'sum' 
+        choice_query: 'select distinct resource_type from optimized.projects'
+      -
+        column: 'poverty_level'
+        metrics:
+          - 'sum' 
+        choice_query: 'select distinct left(poverty_level, 8) from optimized.projects'
+      -
+        column: 'grade_level'
+        metrics:
+          - 'sum' 
+        choice_query: 'select distinct grade_level from optimized.projects'
+      -
+        column: 'teacher_prefix'
+        metrics:
+          - 'sum' 
+        choice_query: 'select distinct teacher_prefix from optimized.projects'
+      -
+        column: 'school_state'
+        metrics:
+          - 'sum' 
+        choice_query: 'select distinct school_state from optimized.projects'
+    
+    aggregates:
+      -
+        quantity: 'total_asking_price'
         metrics:
           - 'sum'
-        choice_query: 'select distinct school_charter from optimized.projects'
+      
+    intervals: ['all']
+    groups: ['entity_id']
+
+  -
+    prefix: 'resources_features'
+    from_obj: 'optimized.resources'
+    knowledge_date_column: 'date_posted'
+    
+    aggregates_imputation:
+      all:
+        type: 'zero'
+    
+    aggregates:
+      -
+        quantity: 'item_unit_price'
+        metrics:
+          - 'sum'
+        quantity: 'item_quantity'
+        metrics:
+          - 'sum'
+    intervals: ['all']
+    groups: ['entity_id']
+  
+  -
+    prefix: 'essay_features'
+    from_obj: 'optimized.essays'
+    knowledge_date_column: 'date_posted'
+
+    aggregates_imputation:
+      all:
+        type: 'zero'
+
+    aggregates:
+      -
+        quantity: 'length(essay)::int'
+        metrics:
+          - 'sum'
     intervals: ['all']
     groups: ['entity_id']
 
