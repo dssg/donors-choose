@@ -224,6 +224,22 @@ grid_config:
       max_features: [3, 5, 8, 10, 12, 15, 'auto', 'log2']
       min_samples_split: [2, 10, 25, 50]
   'sklearn.linear_model.LogisticRegression':
+      max_iter: [10000]
+      penalty: ['l1', 'l2']
+      C: [0.001, 0.01, 0.1, 0.5, 1, 2, 10]
+      solver: ['saga']
+  'sklearn.tree.DecisionTreeClassifier':
+      max_depth: [2, 5, 10, 50]
+      max_feature: [2, 5, 10, 'auto', 'log2']
+      min_samples_split: [2, 10, 25, 50]
+  'sklearn.tree.DecisionTreeClassifier':
+      # baseline tree
+      max_depth: [1]
+      random_state: [0]
+  'sklearn.dummy.DummyClassifier':
+      # baseline, predicts base rate
+      strategy: ['prior']
+# model_grid_preset: 'quickstart'
 
   'sklearn.tree.DecisionTreeClassifier':
 scoring:
@@ -231,4 +247,9 @@ scoring:
         -
           metrics: [precision@]
           thresholds:
-            percentiles: [10]
+            top_n: [50]
+
+individual_importance:
+    methods: [] # empty list means don't calculate individual importances
+    # methods: ['uniform']
+    n_ranks: 5
