@@ -25,6 +25,22 @@ We received a static database containing 5 tables:
 | **outcomes**  | Table of post-project outcomes. This table contains information that would be unavailable at time of prediction in a real-world case, so it is unused.  | projectid   | no    |
 
 
+### Initial Processing
+
+We performed some initial processing of the source database to improve database performance and ensure compliance with Triage. These changes are stored in a copy of the source schema, called optimized.
+
+#### Renaming projectid to entity_id
+
+Triage expects each feature and label row to be identified by a primary key called entity_id. For convenience, we renamed projectid (our entity primary key) to entity_id.
+
+#### Integer entity ids
+
+We replaced the source database's string (postgres varchar(32)) projectid key with integer keys. Triage [requires integer entityids](https://dssg.github.io/triage/experiments/cohort-labels/#note-2), and integer keys will improve performance on joins and group operations.
+
+#### Primary & Foreign Key constraints
+
+We create primary key constraints on projectid in all tables (and a foreign key constraint on donations.projectid). This improves performance by creating indexes on each of those columns.
+
 ### Problem Framing
 
 Let's start by stating our qualitative understanding of the problem. Then, we'll translate that into a formal problem framing, using the language of the Triage experiment config file.
@@ -119,3 +135,16 @@ label_config:
 ```
 unsure if I should put the query here? do I need to repeat this (and other config parameters) since they're also in the config file?
 
+### Feature Generation
+
+We implement two categories of features. The first are features that we read directly from the database, raw, or with only transformations. These include project metadata such as teacher and student demographic information, category and price of requested resource, essay length, and other variables.
+
+These features can be generated exclusively within triage, without performing any manual transforms within the database.
+
+The second category of features are temporal aggregations of historical donation information. These answer questions like "how did a posting teacher's previous projects perform?" and "how did previous projects at the originating school perform?"
+
+_Specifically, these features calculate funding rate (rate of successful projects) and average total donations over the 1 or 2 years prior to posting, within the same school district or zip, or from the same teacher as a project in question. (revise)_
+
+These aggregations would be too complex to perform with Triage's feature aggregation system. So we wrote a series of sql queries to generate these feature manually, and stored them in a table called `time_series_features`.
+
+The DDL statements that create these features are stored in [precompute_queries](precompute_queries)
