@@ -6,9 +6,12 @@ from triage.component.timechop import Timechop
 from triage.component.timechop.plotting import visualize_chops
 from triage.component.architect.feature_generators import FeatureGenerator
 from triage.experiments import MultiCoreExperiment
+import logging
 
 import os
 os.chdir('donors-choose')
+
+logging.basicConfig(level=logging.INFO)
 
 # creating database engine
 dbfile = 'database.yaml'
