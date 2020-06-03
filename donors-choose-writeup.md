@@ -1,6 +1,6 @@
-### Introduction
+## Introduction
 
-#### DonorsChoose
+### DonorsChoose
 
 [DonorsChoose](https://www.donorschoose.org/) is a nonprofit that addresses the education funding gap through crowdfunding. Since 2000, they have facilitated $970 million in donations to 40 million students in the United States.
 
@@ -8,7 +8,7 @@ However, approximately one third of all projects posted on DonorsChoose do not r
 
 This project will help DonorsChoose shrink the education funding gap by ensuring that more projects reach their funding goals. We will create an early warning system that identifies newly-posted projects that are likely to fail to meet their funding goals, allowing DonorsChoose to target those projects with an intervention such as a donation matching grant.
 
-#### The DonorsChoose Database
+### The DonorsChoose Database
 
 The donorschoose database contains 5 tables:
 
@@ -21,27 +21,27 @@ The donorschoose database contains 5 tables:
 | **outcomes**  | Table of post-project outcomes. This table contains information that would be unavailable at time of prediction in a real-world case, so it is unused.  | projectid   | no    |
 
 
-### Initial Processing
+## Initial Processing
 
 We performed some initial processing of the source database to improve database performance and ensure compliance with Triage. These changes are stored in a copy of the source schema, called optimized.
 
-#### Renaming projectid to entity_id
+### Renaming projectid to entity_id
 
 Triage expects each feature and label row to be identified by a primary key called entity_id. For convenience, we renamed projectid (our entity primary key) to entity_id.
 
-#### Integer entity ids
+### Integer entity ids
 
 We replaced the source database's string (postgres varchar(32)) projectid key with integer keys. Triage [requires integer entityids](https://dssg.github.io/triage/experiments/cohort-labels/#note-2), and integer keys will improve performance on joins and group operations.
 
-#### Primary & Foreign Key constraints
+### Primary & Foreign Key constraints
 
 We create primary key constraints on projectid in all tables (and a foreign key constraint on donations.projectid). This improves performance by creating indexes on each of those columns.
 
-### Problem Framing
+## Problem Framing
 
 Let's start by stating our qualitative understanding of the problem. Then, we'll translate that into a formal problem framing, using the language of the Triage experiment config file.
 
-#### Qualitative Framing
+### Qualitative Framing
 
 DonorsChoose wants to institute a program where a group of projects at risk of falling short on funding are selected to recieve extra support: enrollment in a matching grant program funded by DonorsChoose's corporate partners, and prominent placement on the DonorsChoose project discovery page.
 
@@ -51,11 +51,9 @@ Once a DonorsChoose project has been posted, it can recieve donations for four m
 
 Therefore, our goal is to identify a machine learning model that identifies the 50 projects posted each month that are most likely to fail to reach their funding goal by four months later.
 
-#### Triage Framing
+### Triage Framing
 
-We can define our problem framing in a single [experiment config file](https://github.com/dssg/triage/blob/master/example/config/experiment.yaml).
-
-##### Start and End Times
+#### Temporal Config
 
 For this project. we're using data from the projects posted between September 1, 2011 and June 1, 2013. 
 
@@ -66,29 +64,24 @@ label_start_time: '2011-09-01'
 feature_end_time: '2013-06-01'
 label_end_time: '2013-06-01'
 ```
-##### Model update frequency
 
 Each month, the previous month's data becomes availabe for training a new model. 
 
 `model_update_frequency: '1month'`
 
-##### as_of_date frequencies
 
 > ask about this. Still don't quite understand the justification. Seems like 1 day is just the default value. But how to explain to audience?
 
-##### Test duration
 
 Our model will make predictions once a month, on the previous month's unlabeled data. Our one month test set length reflects this.
 
 `test_durations:['1month']`
 
-##### Training history
 
 Patterns in the DonorsChoose data can change significantly within a year. We use one-month training sets ensuring that our models are trained on recent data, and capture recent trends.
 
 `max_training_histories: ['1month']`
 
-##### Label Timespan
 
 A project's label can only be measured four months after it has been posting. This means that each project has a four month label timespan.
 
@@ -97,9 +90,13 @@ training_label_timespans: ['4month']
 test_label_timespans: ['4month']
 ```
 
-This temporal config produces 
+Here's our temporal config in a timechop diagram:
 
-##### Outcome
+![timechop](triage_output/timechop.png)
+
+Triage builds a 13th train/test set with data from just a few as_of_dates in September 2011 - we'll ignore models from that set in model selection.
+
+#### Outcome
 
 Under our framing, each project can have one of two outcomes:
 
@@ -129,11 +126,11 @@ RIGHT JOIN donation_totals using(entity_id)
 ```
 unsure if I should put the query here? do I need to repeat this (and other config parameters) since they're also in the config file?
 
-##### Metric
+#### Metric
 
 Since our intervention is resource-constrained and limited to 50 projects each month, we are concerned with minimizing false positives. We optimize our models for precision at top 50.
 
-### Feature Generation
+## Feature Generation
 
 We implement two categories of features. The first are features that we read directly from the database, raw, or with only transformations. These include project metadata such as teacher and student demographic information, category and price of requested resource, essay length, and other variables.
 
@@ -147,3 +144,28 @@ These aggregations would be too complex to perform with Triage's feature aggrega
 
 The DDL statements that create these features are stored in [precompute_queries](precompute_queries)
 
+## Model Selection
+
+We use Auditioner to manage model selection. Plotting precision@50_abs over time shows that our models are generally performing well. Performance ranges from ~0.5 to 0.8, well above the prior rate of ~0.3.
+
+![precision@50_over_time](triage_output/metric_over_time_precision@50_abs.png)
+
+Building a basic Auditioner model selection grid, it looks like variance-penalized average precision (penalty = 0.5) and best current precision minimize regret.
+
+|Criteria|Average regret (precision @ 50_abs)|
+|-|-|
+|Variance-penalized average precision (0.5)|0.0819|
+|Best current precision | 0.0789|
+|Most frequently within .03 of best | 0.0909|
+
+![regret_over_time](triage_output/regret_over_time_precision@50_abs.png)
+
+Variance-penalized average precision seems like a safe choice. It performs only slightly worse than the best criteria, and allows us to ignore models that perform inconsistently.
+
+This criteria selects three random forest model groups for the next period:
+
+|                                         | max_depth | max_features | n_estimators | min_samples_split |
+|-----------------------------------------|-----------|--------------|--------------|-------------------|
+| RandomForestClassifier | 10        | 12           | 10000        | 50                |
+| RandomForestClassifier | 10        | auto         | 5000         | 25                |
+| RandomForestClassifier | 10        | log2         | 1000         | 25                |
