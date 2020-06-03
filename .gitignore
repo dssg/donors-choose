@@ -5,3 +5,6 @@ images/*
 .vscode/*
 old_files/*
 .ipynb_checkpoints/*
+.gitattributes
+*.log
+scratch*
