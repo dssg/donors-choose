@@ -3,3 +3,5 @@ database.yaml
 cache/*
 images/*
 .vscode/*
+old_files/*
+.ipynb_checkpoints/*

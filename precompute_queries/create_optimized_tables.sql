@@ -140,4 +140,9 @@ ALTER TABLE optimized.outcomes DROP COLUMN projectid_str_short;
 ALTER TABLE optimized.projects DROP CONSTRAINT projects_pkey CASCADE;
 
 ALTER TABLE optimized.projects ADD PRIMARY KEY (projectid);
-ALTER TABLE optimized.donations ADD CONSTRAINT donations_fkey FOREIGN KEY (projectid) REFERENCES optimized.projects (projectid);
+ALTER TABLE optimized.donations ADD CONSTRAINT donations_fkey FOREIGN KEY (projectid) REFERENCES optimized.projects (entity_id);
+
+
+-- This column name is too long for triage to handle. Renaming to someting shorter.
+ALTER TABLE optimized.projects
+RENAME total_price_excluding_optional_support TO total_asking_price
