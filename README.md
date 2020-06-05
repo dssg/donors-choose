@@ -60,30 +60,35 @@ Let's start by stating our qualitative understanding of the problem. Then, we'll
 
 ### Qualitative Framing
 
-DonorsChoose wants to institute a program where a group of projects at risk of falling short on funding are selected to recieve extra support: enrollment in a matching grant program funded by DonorsChoose's corporate partners, and prominent placement on the DonorsChoose project discovery page.
-
-Since these interventions have limited capacity (funding is limited, and only a few projects at a time can really benefit from extra promotion on the homepage), we will identify 50 projects posted each month that need extra support.
-
 Once a DonorsChoose project has been posted, it can recieve donations for four months. If it doesn't reach its funding goal by then, it is considered unfunded.
 
-Therefore, our goal is to identify a machine learning model that identifies the 50 projects posted each month that are most likely to fail to reach their funding goal by four months later.
+DonorsChoose wants to institute a program where a group of projects at risk of falling short on funding are selected to recieve extra support: enrollment in a matching grant program funded by DonorsChoose's corporate partners, and prominent placement on the DonorsChoose project discovery page.
+
+These interventions have limited capacity: funding is limited, and only a few projects at a time can really benefit from extra promotion on the homepage. Each day, DonorsChoose chooses a few newly-posted projects to be enrolled in these interventions, based on information in their application for funding. Each month, 50 projects in total are enrolled in the interventions.
+
+Therefore, our goal is to identify a machine learning model that identifies the 50 projects posted each month that are most likely to fail to reach their funding goal.
 
 ### Triage Framing
 
 #### Temporal Config
 
-##### Start & End Times
-For this project. we're using data from the projects posted between September 1, 2011 and June 1, 2013. 
+##### Start & end times
+
+![project_counts_by_month](triage_output/project_counts_by_month.png)
+
+DonorsChoose project applications grew significantly during 2010 and 2011. We select a dataset starting in mid-2011, after this period of growth, and running through the end of 2013, the last compete year of data.
 
 ```
-feature_start_time: '2011-09-01'
-label_start_time: '2011-09-01'
+feature_start_time: '2011-09-02'
+label_start_time: '2011-09-02'
 
 feature_end_time: '2013-06-01'
 label_end_time: '2013-06-01'
 ```
 
-##### Model Update Frequency
+> Starting with September 1, 2011 causes Triage to generate a useless 13th training set containing a single day's worth of projects. We start our data on September 2nd to avoid this.
+
+##### Model update frequency
 Each month, the previous month's data becomes availabe for training a new model. 
 
 `model_update_frequency: '1month'`
@@ -94,17 +99,24 @@ Our model will make predictions once a month, on the previous month's unlabeled 
 
 `test_durations:['1month']`
 
-##### Training History
+##### Training history
 
 Patterns in the DonorsChoose data can change significantly within a year. We use one-month training sets ensuring that our models are trained on recent data, and capture recent trends.
 
 `max_training_histories: ['1month']`
 
-##### Label Timespan
+##### As of date frequencies
 
-An entity's label timespan is the amount of time that must pass from when an event occurs, to its 
+When the model is in production, DonorsChoose will evaluate new projects daily. We use a 1 day as of date frequency to simulate the rate at which DonorsChoose will evaluate the model's predictions.
 
-A project's label can only be measured four months after it has been posting. This means that each project has a four month label timespan.
+```
+training_as_of_date_frequencies: ['1day']
+test_as_of_date_frequencies: ['1day']
+```
+
+##### Label timespan
+
+An proejct's label timespan is the amount of time that must pass from when a project is posted, to when its label can be determined. In our case, each project has a four month label timespan.
 
 ```
 training_label_timespans: ['4month']
@@ -146,12 +158,39 @@ These aggregations would be too complex to perform with Triage's feature aggrega
 
 The DDL statements that create these features are stored in [precompute_queries](precompute_queries)
 
-## Model Selection
+## Modeling
 
-We use Auditioner to manage model selection. Plotting precision@50_abs over time shows that our models are generally performing well. Performance ranges from ~0.5 to 0.8, well above the prior rate of ~0.3.
+### Model Grid
+
+Our model grid includes three model function candidates, and three baseline sources.
+
+Model function candidates:
+- sklearn.ensemble.RandomForestClassifier
+- sklearn.linear_model.LogisticRegression
+- sklearn.tree.DecisionTreeClassifier
+
+Baslines:
+- sklearn.tree.DecisionTreeClassifier (max_depth = 2)
+- sklearn.dummy.DummyClassifier (predicting our label's base rate)
+- triage's PercentileRankeOneFeature, which ranks entities based on a single feature.
+
+### Model Selection
+
+![precision@50_over_time_all_models](triage_output/metric_over_time_precision@50_abs_all_models.png)
+
+We use Auditioner to manage model selection. Plotting precision@50_abs over time shows that our models are generally performing well - most models perform better than baselines (sklearn's DummyClassifier predicting the label's prevalence for all projects, and a 2-depth decision tree).
+
+Our logistic regression model groups tend to perform worse than our random forests. The diference in performance (as much as .25) doesn't justify a tradeoff for the models' potential higher interpretability.
+
+
+
+We use Auditioner to perform some coarse filtering, eliminating the worst-performing model groups:
+- Dropping model groups that achieved precision@50 worse than 0.5 in at least one test set
+- Dropping model groups that had a regret (difference in performance from the best-performing model group) of 0.2 or greater during at least one month
+
+Performance in the resulting set of model groups ranges from ~0.5 to 0.8, well above the prior rate of ~0.3. Looking pretty good so far.
 
 ![precision@50_over_time](triage_output/metric_over_time_precision@50_abs.png)
-
 Building a basic Auditioner model selection grid, it looks like variance-penalized average precision (penalty = 0.5) and best current precision minimize regret.
 
 |Criteria|Average regret (precision @ 50_abs)|
