@@ -6,13 +6,13 @@ temporal_config:
 
     # first date your feature data is good
     #
-    feature_start_time: '2011-09-01'
+    feature_start_time: '2011-09-02'
     feature_end_time: '2013-06-01'
 
     # first date your labels are good
     # donorschoose: as far back as we have good donation data
     # defines entire span of label generation
-    label_start_time: '2011-09-01'
+    label_start_time: '2011-09-02'
     label_end_time: '2013-06-01'
 
     model_update_frequency: '1month'
@@ -231,16 +231,15 @@ grid_config:
       solver: ['saga']
   'sklearn.tree.DecisionTreeClassifier':
       max_depth: [2, 5, 10, 50]
-      max_feature: [2, 5, 10, 'auto', 'log2']
+      max_features: [null, 2, 5, 10, 'auto', 'log2']
       min_samples_split: [2, 10, 25, 50]
-  'sklearn.tree.DecisionTreeClassifier':
-      # baseline tree
-      max_depth: [1]
       random_state: [0]
   'sklearn.dummy.DummyClassifier':
       # baseline, predicts base rate
       strategy: ['prior']
-# model_grid_preset: 'quickstart'
+  'triage.component.catwalk.baselines.rankers.PercentileRankOneFeature':
+      feature: ['resources_features_entity_id_all_item_quantity_imp']
+
 
 scoring:
     testing_metric_groups:
@@ -249,7 +248,4 @@ scoring:
           thresholds:
             top_n: [50]
 
-individual_importance:
-    methods: [] # empty list means don't calculate individual importances
-    # methods: ['uniform']
-    n_ranks: 5
+random_seed: 1995
