@@ -4,7 +4,7 @@
 
 1. Configure a postgres database with the [KDD Cup 2014 DonorsChoose dataset](https://www.kaggle.com/c/kdd-cup-2014-predicting-excitement-at-donors-choose/data), using the tables `donations.csv`, `essays.csv`, `projects.csv`, and `resources.csv`
 
-> Note: Kaggle hosts a [more recent DonorsChoose dataset](https://www.kaggle.com/donorschoose/io), which goes through May 2018. It includes similar data, but in a slightly different schema.
+> Note: Kaggle hosts a [more recent DonorsChoose dataset](https://www.kaggle.com/donorschoose/io), which includes data from as recent as May 2018. It includes a similar set of variables, but in a different schema.
 
 2. Create a new python environment and install python prerequisites from requirements.txt:
 
@@ -34,25 +34,25 @@ We use four tables from the DonorsChoose database:
 | Name          | Description                                                                                                                                                | Primary Key | Used? |
 |---------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|-------|
 | **projects**  | Basic metadata including teacher, class, and school information, and project asking price.                                                                 | projectid   | yes   |
-| **resources** | Information about the classroom supply or tool the classroom is seeking funding for. Product category, per-unit price, quantity requested, etc.            | projectid   | yes   |
-| **essays**    | Stores text of funding request.                                                                                                                            | projectid   | yes   |
+| **resources** | Information about the classroom supply or resource to be funded. Product category, per-unit price, quantity requested, etc.            | projectid   | yes   |
+| **essays**    | Text of funding request.                                                                                                                            | projectid   | yes   |
 | **donations** | Table of donations. Donor information, donation amount, messages from donors. Zero to many rows per project.| donationid  | yes   |
 
 ## Initial Processing
 
-We performed some initial processing of the source database to improve database performance and ensure compliance with Triage. These changes are stored in a copy of the source schema, called optimized.
+We performed some initial processing of the source database to improve database performance and ensure compliance with Triage. The altered tables are stored in a second database schema, leaving the raw data intact.
 
 ### Renaming projectid to entity_id
 
-Triage expects each feature and label row to be identified by a primary key called entity_id. For convenience, we renamed projectid (our entity primary key) to entity_id.
+Triage expects each feature and label row to be identified by a primary key called entity_id. For convenience, we renamed `projectid` (our entity primary key) to `entity_id`.
 
 ### Integer entity ids
 
-We replaced the source database's string (postgres varchar(32)) projectid key with integer keys. Triage [requires integer entityids](https://dssg.github.io/triage/experiments/cohort-labels/#note-2), and integer keys will improve performance on joins and group operations.
+We replaced the source database's string (postgres `varchar(32)`) projectid key with integer keys. Triage [requires integer entityids](https://dssg.github.io/triage/experiments/cohort-labels/#note-2), and integer keys will improve performance on joins and group operations.
 
 ### Primary & Foreign Key constraints
 
-We create primary key constraints on projectid in all tables (and a foreign key constraint on donations.projectid). This improves performance by creating indexes on each of those columns.
+We create primary key constraints on projectid in all tables (and a foreign key constraint on donations.projectid). This creates indexes on each of those columns, improving performance in label & feature generation.
 
 ## Problem Framing
 
@@ -86,7 +86,7 @@ feature_end_time: '2013-06-01'
 label_end_time: '2013-06-01'
 ```
 
-> Starting with September 1, 2011 causes Triage to generate a useless 13th training set containing a single day's worth of projects. We start our data on September 2nd to avoid this.
+> Starting with September 1, 2011 causes Triage to generate a useless 13th training set containing a single day's worth of projects. We start our data on September 2, 2011 to avoid this.
 
 ##### Model update frequency
 Each month, the previous month's data becomes availabe for training a new model. 
@@ -101,13 +101,13 @@ Our model will make predictions once a month, on the previous month's unlabeled 
 
 ##### Training history
 
-Patterns in the DonorsChoose data can change significantly within a year. We use one-month training sets ensuring that our models are trained on recent data, and capture recent trends.
+Patterns in the DonorsChoose data can change significantly within a year. We use one-month training sets ensuring that our models capture trends from recent data.
 
 `max_training_histories: ['1month']`
 
 ##### As of date frequencies
 
-When the model is in production, DonorsChoose will evaluate new projects daily. We use a 1 day as of date frequency to simulate the rate at which DonorsChoose will evaluate the model's predictions.
+When the model is in production, DonorsChoose will evaluate new projects daily. We use a 1 day as of date frequency to simulate the rate at which DonorsChoose will access the model's predictions.
 
 ```
 training_as_of_date_frequencies: ['1day']
@@ -116,18 +116,16 @@ test_as_of_date_frequencies: ['1day']
 
 ##### Label timespan
 
-An proejct's label timespan is the amount of time that must pass from when a project is posted, to when its label can be determined. In our case, each project has a four month label timespan.
+An proejct's label timespan is the amount of time that must pass from when it is posted, to when its label can be determined. In our case, each project has a four month label timespan.
 
 ```
 training_label_timespans: ['4month']
 test_label_timespans: ['4month']
 ```
 
-Here's our temporal config in a timechop diagram:
+Here's a timechop diagram representing our temporal config:
 
 ![timechop](triage_output/timechop.png)
-
-Triage builds a 13th train/test set with data from just a few as_of_dates in September 2011 - we'll ignore models from that set in model selection.
 
 #### Outcome
 
@@ -138,23 +136,19 @@ Under our framing, each project can have one of two outcomes:
 
 We generate our label with a query that sums total donations to each project, and calculates a binary variable representing whether the project went unfunded (`1`) or met its goal (`0`).
 
-Our query is parameterized by triage over `label_timespan` (in our case, always four months) and `as_of_date` (used here to select all the projects posted on a given `as_of_date`).
-
 #### Metric
 
-Since our intervention is resource-constrained and limited to 50 projects each month, we are concerned with minimizing false positives. We optimize our models for precision at top 50.
+Since our intervention is resource-constrained and limited to 50 projects each month, we are concerned with minimizing false positives. We track how our models perform on precision among the 50 projects predicted at highest risk of going unfunded.
 
 ## Feature Generation
 
-We implement two categories of features. The first are features that we read directly from the database, raw, or with only transformations. These include project metadata such as teacher and student demographic information, category and price of requested resource, essay length, and other variables.
+We implement two categories of features. The first are features that we read directly from the database, raw, or with basic transformations. These include information like teacher and school demographics, type and price of requested classroom resources, and essay length.
 
-These features can be generated exclusively within triage, without performing any manual transforms within the database.
+Triage can generate these features directly from our source data, without us performing any manual transforms or aggregations.
 
 The second category of features are temporal aggregations of historical donation information. These answer questions like "how did a posting teacher's previous projects perform?" and "how did previous projects at the originating school perform?"
 
-_Specifically, these features calculate funding rate (rate of successful projects) and average total donations over the 1 or 2 years prior to posting, within the same school district or zip, or from the same teacher as a project in question. (revise)_
-
-These aggregations would be too complex to perform with Triage's feature aggregation system. So we wrote a series of sql queries to generate these feature manually, and stored them in a table called `time_series_features`.
+These aggregations would be too complex to perform with Triage's feature aggregation system. So we generate them manually and store them alongside the source data.
 
 The DDL statements that create these features are stored in [precompute_queries](precompute_queries)
 
@@ -162,23 +156,23 @@ The DDL statements that create these features are stored in [precompute_queries]
 
 ### Model Grid
 
-Our model grid includes three model function candidates, and three baseline sources.
+Our model grid includes three model function candidates, and three baseline model specifications.
 
 Model function candidates:
-- sklearn.ensemble.RandomForestClassifier
-- sklearn.linear_model.LogisticRegression
-- sklearn.tree.DecisionTreeClassifier
+- `sklearn.ensemble.RandomForestClassifier`
+- `sklearn.linear_model.LogisticRegression`
+- `sklearn.tree.DecisionTreeClassifier`
 
 Baslines:
-- sklearn.tree.DecisionTreeClassifier (max_depth = 2)
-- sklearn.dummy.DummyClassifier (predicting our label's base rate)
-- triage's PercentileRankeOneFeature, which ranks entities based on a single feature.
+- `sklearn.tree.DecisionTreeClassifier` (max_depth = 2)
+- `sklearn.dummy.DummyClassifier` (predicting our label's base rate)
+- Triage's `PercentileRankeOneFeature`, which ranks entities based on a single feature.
 
 ### Model Selection
 
 ![precision@50_over_time_all_models](triage_output/metric_over_time_precision@50_abs_all_models.png)
 
-We use Auditioner to manage model selection. Plotting precision@50_abs over time shows that our models are generally performing well - most models perform better than baselines (sklearn's DummyClassifier predicting the label's prevalence for all projects, and a 2-depth decision tree).
+We use Auditioner to manage model selection. Plotting precision@50_abs over time shows that our models groups are generally working well, with most performing better than baselines.
 
 Our logistic regression model groups tend to perform worse than our random forests. The diference in performance (as much as .25) doesn't justify a tradeoff for the models' potential higher interpretability.
 
