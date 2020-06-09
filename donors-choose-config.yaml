@@ -4,19 +4,16 @@ model_comment: 'quickstart test run'
 
 temporal_config:
 
-    # first date your feature data is good
-    #
-    feature_start_time: '2011-09-02'
+    # first date our feature data is good
+    feature_start_time: '2000-01-01'
     feature_end_time: '2013-06-01'
 
-    # first date your labels are good
+    # first date our label data is good
     # donorschoose: as far back as we have good donation data
-    # defines entire span of label generation
     label_start_time: '2011-09-02'
     label_end_time: '2013-06-01'
 
     model_update_frequency: '1month'
-
 
     # length of time defining a test set
     test_durations: ['1month']
@@ -111,7 +108,9 @@ feature_aggregations:
         metrics:
           - 'sum'
       
-    intervals: ['all']
+    # Since our time-aggregate features are precomputed, feature interval is 
+    # irrelvant. We keep 'all' as a default.
+    intervals: ['all'] 
     groups: ['entity_id']
 
   -
@@ -128,6 +127,7 @@ feature_aggregations:
         quantity: 'item_unit_price'
         metrics:
           - 'sum'
+      -
         quantity: 'item_quantity'
         metrics:
           - 'sum'
@@ -238,7 +238,7 @@ grid_config:
       # baseline, predicts base rate
       strategy: ['prior']
   'triage.component.catwalk.baselines.rankers.PercentileRankOneFeature':
-      feature: ['resources_features_entity_id_all_item_quantity_imp']
+      feature: ['project_features_entity_id_all_total_asking_price_imp']
 
 
 scoring:
