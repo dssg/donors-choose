@@ -76,13 +76,17 @@ Therefore, our goal is to identify a machine learning model that identifies the 
 
 ![project_counts_by_month](triage_output/project_counts_by_month.png)
 
-DonorsChoose project applications grew significantly during 2010 and 2011. We select a dataset starting in mid-2011, after this period of growth, and running through the end of 2013, the last compete year of data.
+We'll use the earliest available data in feature generation. Historical information on project performance is likely useful in predicting the performance of new projects in the same locations, or under the same teachers.
 
 ```
-feature_start_time: '2011-09-02'
-label_start_time: '2011-09-02'
-
+feature_start_time: '2000-01-01'
 feature_end_time: '2013-06-01'
+```
+
+We're most interested in evaluating the performance of our models on data from recent years. We select a dataset starting in mid-2011, after this period of growth, and running through the end of 2013, the last compete year of data.
+
+```
+label_start_time: '2011-09-02'
 label_end_time: '2013-06-01'
 ```
 
@@ -152,6 +156,8 @@ These aggregations would be too complex to perform with Triage's feature aggrega
 
 The DDL statements that create these features are stored in [precompute_queries](precompute_queries)
 
+> Note: in `donors-choose-config.yaml`, we define all feature aggregates over the default interval `all`. This parameter isn't relevant to this project, because all of our time-aggregate features are calculated outside of Triage.
+
 ## Modeling
 
 ### Model Grid
@@ -174,9 +180,7 @@ Baselines:
 
 We use Auditioner to manage model selection. Plotting precision@50_abs over time shows that our models groups are generally working well, with most performing better than baselines.
 
-Our logistic regression model groups tend to perform worse than our random forests. The diference in performance (as much as .25) doesn't justify a tradeoff for the models' potential higher interpretability.
-
-
+Our logistic regression model groups tend to perform worse than our random forests. The difference in performance (as much as .25) doesn't justify a tradeoff for the models' potential higher interpretability. Plain decision trees also seem to perform consistently worse than random forests.
 
 We use Auditioner to perform some coarse filtering, eliminating the worst-performing model groups:
 - Dropping model groups that achieved precision@50 worse than 0.5 in at least one test set
@@ -189,18 +193,19 @@ Building a basic Auditioner model selection grid, it looks like variance-penaliz
 
 |Criteria|Average regret (precision @ 50_abs)|
 |-|-|
-|Variance-penalized average precision (0.5)|0.0819|
-|Best current precision | 0.0789|
-|Most frequently within .03 of best | 0.0909|
+|Best current precision | 0.0905|
+|Most frequently within .1 of best | 0.0942|
+|Most frequently within .03 of best | 0.0996|
+|Random model group| 0.1087
 
 ![regret_over_time](triage_output/regret_over_time_precision@50_abs.png)
 
-Variance-penalized average precision seems like a safe choice. It performs only slightly worse than the best criteria, and allows us to ignore models that perform inconsistently.
+Best current precision, which selects the best-performing model group to serve as the predictor for the next month, minimizes average regret, and beats a random baseline.
 
 This criteria selects three random forest model groups for the next period:
 
 |                                         | max_depth | max_features | n_estimators | min_samples_split |
 |-----------------------------------------|-----------|--------------|--------------|-------------------|
-| RandomForestClassifier | 10        | 12           | 10000        | 50                |
-| RandomForestClassifier | 10        | auto         | 5000         | 25                |
-| RandomForestClassifier | 10        | log2         | 1000         | 25                |
+| RandomForestClassifier | 5        | 12           | 1000        | 25                |
+| RandomForestClassifier | 10        | 12         | 1000         | 50                |
+| RandomForestClassifier | 10        | 12         | 10000         | 50                |
