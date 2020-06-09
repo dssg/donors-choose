@@ -11,7 +11,11 @@ import logging
 import os
 os.chdir('donors-choose')
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, 
+                    filename = 'triage.log',
+                    filemode='a',
+                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                    datefmt='%H:%M:%S')
 
 # creating database engine
 dbfile = 'database.yaml'
