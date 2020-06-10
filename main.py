@@ -40,6 +40,12 @@ with open('donors-choose-config.yaml', 'r') as fin:
 # generating temporal config plot
 chopper = Timechop(**config['temporal_config'])
 
+# We aren't interested in seeing the entire feature_start_time represented
+# in our timechop plot. That would hide the interesting information. So we
+# set it to equal label_start_time for the plot.
+
+chopper.feature_start_time = chopper.label_start_time 
+
 visualize_chops(chopper, save_target = 'triage_output/timechop.png')
 
 # creating experiment object
