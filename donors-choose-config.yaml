@@ -5,13 +5,13 @@ model_comment: 'quickstart test run'
 temporal_config:
 
     # first date our feature data is good
-    feature_start_time: '2000-01-01'
-    feature_end_time: '2013-06-01'
+    feature_start_time: '2013-01-01'
+    feature_end_time: '2019-01-01'
 
     # first date our label data is good
     # donorschoose: as far back as we have good donation data
-    label_start_time: '2011-09-02'
-    label_end_time: '2013-06-01'
+    label_start_time: '2013-01-01'
+    label_end_time: '2019-01-01'
 
     model_update_frequency: '1month'
 

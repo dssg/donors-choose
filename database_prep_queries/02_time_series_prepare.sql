@@ -1,3 +1,3 @@
-CREATE TABLE optimized.time_series_features as (SELECT DISTINCT entity_id, date_posted FROM optimized.projects)
+CREATE TABLE optimized.time_series_features as (SELECT DISTINCT entity_id, date_posted FROM projects);
 alter table optimized.time_series_features
-    add constraint FOREIGN KEY(entity_id) REFERENCES optimized.projects (entity_id)
+    add constraint entity_match FOREIGN KEY(entity_id) REFERENCES projects (entity_id);
