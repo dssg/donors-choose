@@ -6,14 +6,14 @@ temporal_config:
 
     # first date our feature data is good
     feature_start_time: '2013-01-01'
-    feature_end_time: '2019-01-01'
+    feature_end_time: '2018-01-01'
 
     # first date our label data is good
     # donorschoose: as far back as we have good donation data
     label_start_time: '2013-01-01'
-    label_end_time: '2019-01-01'
+    label_end_time: '2018-01-01'
 
-    model_update_frequency: '1month'
+    model_update_frequency: '3month'
 
     # length of time defining a test set
     test_durations: ['1month']
@@ -220,32 +220,38 @@ feature_aggregations:
       
 grid_config:
   'sklearn.ensemble.RandomForestClassifier':
-      n_estimators: [1000, 2500, 5000, 10000]
+      n_estimators: [100, 500, 1000, 2500]
       max_depth: [2, 5, 10, 50]
-      max_features: [3, 5, 8, 10, 12, 15, 'auto', 'log2']
       min_samples_split: [2, 10, 25, 50]
-  'sklearn.linear_model.LogisticRegression':
-      max_iter: [10000]
+      n_jobs: [-1]
+  'triage.component.catwalk.estimators.classifiers.ScaledLogisticRegression':
+      C: [0.001, 0.01, 0.1, 1.0, 10]
       penalty: ['l1', 'l2']
-      C: [0.001, 0.01, 0.1, 0.5, 1, 2, 10]
-      solver: ['saga']
   'sklearn.tree.DecisionTreeClassifier':
       max_depth: [2, 5, 10, 50]
       max_features: [null, 2, 5, 10, 'auto', 'log2']
       min_samples_split: [2, 10, 25, 50]
-      random_state: [0]
   'sklearn.dummy.DummyClassifier':
       # baseline, predicts base rate
       strategy: ['prior']
   'triage.component.catwalk.baselines.rankers.PercentileRankOneFeature':
-      feature: ['project_features_entity_id_all_total_asking_price_imp']
+      feature: ['project_features_entity_id_all_total_asking_price_sum']
 
 
 scoring:
     testing_metric_groups:
         -
-          metrics: [precision@]
-          thresholds:
-            top_n: [50]
+            metrics: [precision@, recall@]
+            thresholds:
+                percentiles: [1, 2, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]
+                top_n: [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+        -
+            metrics: [roc_auc]
+    training_metric_groups:
+        -
+            metrics: [precision@, recall@]
+            thresholds:
+                percentiles: [1, 2, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]    
+                top_n: [50, 100, 200, 300, 500, 600, 700, 800, 900, 1000]
 
 random_seed: 1995
