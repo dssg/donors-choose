@@ -33,7 +33,7 @@ INSERT
             grade_level,
             resource_type,
             essay,
-			date_posted
+	    date_posted
         )
     SELECT
         project_id,
