@@ -8,3 +8,5 @@ old_files/*
 .gitattributes
 *.log
 scratch*
+database.yaml
+s3.yaml
