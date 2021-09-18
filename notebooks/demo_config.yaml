@@ -15,12 +15,12 @@ temporal_config:
     label_start_time: '2011-09-02'
     label_end_time: '2013-06-01'
 
-    model_update_frequency: '1month'
+    model_update_frequency: '4month'
 
     # length of time defining a test set
-    test_durations: ['1month']
+    test_durations: ['3month']
     # defines how far back a training set reaches
-    max_training_histories: ['1month']
+    max_training_histories: ['1y']
 
     # we sample every day, since new projects are posted
     # every day
