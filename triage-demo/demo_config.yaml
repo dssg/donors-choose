@@ -153,9 +153,35 @@ feature_aggregations:
 #     intervals: ['all']
 #     groups: ['entity_id']
 
+  - 
+    prefix: 'teachr_funding'
+    from_obj: |
+        (select 
+            p1.entity_id, d.donation_timestamp, d.donation_to_project
+        from optimized.projects_sampled_temp p1 
+        left join optimized.projects_sampled_temp p2 
+            on p1.teacher_acctid=p2.teacher_acctid and p1.date_posted > p2.date_posted
+        left join optimized.donations_sampled_temp d 
+            on p2.entity_id=d.entity_id and d.donation_timestamp < p1.date_posted
+        ) as teacher_funding
+    knowledge_date_column: 'donation_timestamp'
+    
+    aggregates_imputation:
+      all:
+        type: 'zero_noflag' 
+
+    aggregates:
+      - 
+        quantity: 'donation_to_project'
+        metrics:
+          - 'sum'
+          - 'avg'
+    intervals: ['all', '1month', '6month']
+    groups: ['entity_id']
+    
   -
     prefix: 'donation_features'
-    from_obj: 'optimized.time_series_features'
+    from_obj: 'optimized.precomputed_features_sampled'
     knowledge_date_column: 'date_posted'
 
     aggregates_imputation:
@@ -249,12 +275,12 @@ grid_config:
       min_samples_split: [25]
     
     'sklearn.tree.DecisionTreeClassifier':
-      max_depth: [10]
+      max_depth: [3]
       max_features: [null]
       min_samples_split: [25]
       
     'triage.component.catwalk.estimators.classifiers.ScaledLogisticRegression':
-        C: [0.01]
+        C: [0.1]
         penalty: ['l1']
     
     'triage.component.catwalk.baselines.rankers.PercentileRankOneFeature':
@@ -265,20 +291,20 @@ grid_config:
 scoring:
     testing_metric_groups:
         -
-          metrics: [precision@]
+          metrics: [precision@, recall@]
           thresholds:
-          percentiles: [1, 2, 3, 4, 5, 6, 7, 8, 9, 
-              10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-              20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 
-              30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 
-              40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
-              50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
-              60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
-              70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
-              80, 81, 82, 83, 84, 85, 86, 87, 88, 89,
-              90, 91, 92, 93, 94, 95, 96, 97, 98, 99,
-              100]
-          top_n: []
+              percentiles: [1, 2, 3, 4, 5, 6, 7, 8, 9, 
+                  10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+                  20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 
+                  30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 
+                  40, 41, 42, 43, 44, 45, 46, 47, 48, 49,
+                  50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
+                  60, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+                  70, 71, 72, 73, 74, 75, 76, 77, 78, 79,
+                  80, 81, 82, 83, 84, 85, 86, 87, 88, 89,
+                  90, 91, 92, 93, 94, 95, 96, 97, 98, 99,
+                  100]
+              top_n: []
           
 individual_importance:
     methods: [] # empty list means don't calculate individual importances
