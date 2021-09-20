@@ -73,36 +73,11 @@ feature_aggregations:
         type: 'null_category'          
 
     categoricals:
-#       -
-#         column: 'school_metro'
-#         metrics:
-#           - 'sum' 
-#         choice_query: 'select distinct school_metro from optimized.projects'
       -
         column: 'resource_type'
         metrics:
           - 'max' 
         choice_query: 'select distinct resource_type from optimized.projects'
-#       -
-#         column: 'poverty_level'
-#         metrics:
-#           - 'max' 
-#         choice_query: 'select distinct left(poverty_level, 8) from optimized.projects'
-#       -
-#         column: 'grade_level'
-#         metrics:
-#           - 'sum' 
-#         choice_query: 'select distinct grade_level from optimized.projects'
-#       -
-#         column: 'teacher_prefix'
-#         metrics:
-#           - 'sum' 
-#         choice_query: 'select distinct teacher_prefix from optimized.projects'
-#       -
-#         column: 'school_state'
-#         metrics:
-#           - 'sum' 
-#         choice_query: 'select distinct school_state from optimized.projects'
     
     aggregates:
       -
@@ -115,49 +90,11 @@ feature_aggregations:
     intervals: ['all'] 
     groups: ['entity_id']
 
-#   -
-#     prefix: 'resources_features'
-#     from_obj: 'optimized.resources'
-#     knowledge_date_column: 'date_posted'
-    
-#     aggregates_imputation:
-#       all:
-#         type: 'zero'
-    
-#     aggregates:
-#       -
-#         quantity: 'item_unit_price'
-#         metrics:
-#           - 'sum'
-#       -
-#         quantity: 'item_quantity'
-#         metrics:
-#           - 'sum'
-#     intervals: ['all']
-#     groups: ['entity_id']
-  
-#   -
-#     prefix: 'essay_features'
-#     from_obj: 'optimized.essays'
-#     knowledge_date_column: 'date_posted'
-
-#     aggregates_imputation:
-#       all:
-#         type: 'zero'
-
-#     aggregates:
-#       -
-#         quantity: 'length(essay)::int'
-#         metrics:
-#           - 'sum'
-#     intervals: ['all']
-#     groups: ['entity_id']
-
   - 
     prefix: 'teachr_funding'
     from_obj: |
         (select 
-            p1.entity_id, d.donation_timestamp, d.donation_to_project
+            p1.entity_id, d.donation_timestamp, d.donation_to_project as donation
         from optimized.projects_sampled_temp p1 
         left join optimized.projects_sampled_temp p2 
             on p1.teacher_acctid=p2.teacher_acctid and p1.date_posted > p2.date_posted
@@ -167,19 +104,21 @@ feature_aggregations:
     knowledge_date_column: 'donation_timestamp'
     
     aggregates_imputation:
-      all:
+      all: 
         type: 'zero_noflag' 
 
     aggregates:
       - 
-        quantity: 'donation_to_project'
+        quantity: 'donation'
         metrics:
           - 'sum'
           - 'avg'
+    
     intervals: ['all', '1month', '6month']
+    
     groups: ['entity_id']
     
-  -
+  - # precomputed donation history features
     prefix: 'donation_features'
     from_obj: 'optimized.precomputed_features_sampled'
     knowledge_date_column: 'date_posted'
@@ -198,76 +137,11 @@ feature_aggregations:
         quantity: 'district_avg_donations_1yr'
         metrics:
           - 'max'
-#       - # proportion of fully funded projects posted within the last two years at the same district
-#         quantity: 'district_funding_rate_2yr'
-#         metrics:
-#           - 'sum'
-#       - # average donations per project posted within the two years at the same district
-#         quantity: 'district_avg_donations_2yr'
-#         metrics:
-#           - 'sum'
-
-#         # teachers
-#       - # proportion of fully funded projects posted within the last year by the same teacher
-#         quantity: 'teacher_funding_rate_1yr'
-#         metrics:
-#           - 'sum'
-#       - # average donations per project posted within the last year by the same teacher
-#         quantity: 'teacher_avg_donations_1yr'
-#         metrics:
-#           - 'sum'
-#       - # proportion of fully funded projects posted within the last two years by the same teacher
-#         quantity: 'teacher_funding_rate_2yr'
-#         metrics:
-#           - 'sum'
-#       - # average donations per project posted within the two years by the same teacher
-#         quantity: 'teacher_avg_donations_2yr'
-#         metrics:
-#           - 'sum'
-
-#         # zip
-#       - # proportion of fully funded projects posted within the last year in the same zip code
-#         quantity: 'zip_funding_rate_1yr'
-#         metrics:
-#           - 'sum'
-#       - # average donations per project posted within the last year in the same zip code
-#         quantity: 'zip_avg_donations_1yr'
-#         metrics:
-#           - 'sum'
-#       - # proportion of fully funded projects posted within the last two years in the same zip code
-#         quantity: 'zip_funding_rate_2yr'
-#         metrics:
-#           - 'sum'
-#       - # average donations per project posted within the two years in the same zip code
-#         quantity: 'zip_avg_donations_2yr'
-#         metrics:
-#           - 'sum'
 
     intervals: ['all']
     groups: ['entity_id']
       
-# grid_config:
-#   'sklearn.ensemble.RandomForestClassifier':
-#       n_estimators: [1000, 2500, 5000, 10000]
-#       max_depth: [2, 5, 10, 50]
-#       max_features: [3, 5, 8, 10, 12, 15, 'auto', 'log2']
-#       min_samples_split: [2, 10, 25, 50]
-#   'sklearn.linear_model.LogisticRegression':
-#       max_iter: [10000]
-#       penalty: ['l1', 'l2']
-#       C: [0.001, 0.01, 0.1, 0.5, 1, 2, 10]
-#       solver: ['saga']
-#   'sklearn.tree.DecisionTreeClassifier':
-#       max_depth: [2, 5, 10, 50]
-#       max_features: [null, 2, 5, 10, 'auto', 'log2']
-#       min_samples_split: [2, 10, 25, 50]
-#       random_state: [0]
-#   'sklearn.dummy.DummyClassifier':
-#       # baseline, predicts base rate
-#       strategy: ['prior']
-#   'triage.component.catwalk.baselines.rankers.PercentileRankOneFeature':
-#       feature: ['project_features_entity_id_all_total_asking_price_imp']
-
+      
 grid_config:
     'sklearn.ensemble.RandomForestClassifier':
       n_estimators: [150]
