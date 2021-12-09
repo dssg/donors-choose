@@ -28,8 +28,8 @@ sampled_schools as (
     select * from schools order by random() limit 1425
 )
 select 
-    *
-from sampled_schools join optimized.projects using(schoolid)
+    p.*
+from sampled_schools s join optimized.projects p using(schoolid)
 );
 
 
