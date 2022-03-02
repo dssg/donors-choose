@@ -231,7 +231,6 @@ grid_config:
       solver: ['saga']
   'sklearn.tree.DecisionTreeClassifier':
       max_depth: [2, 5, 10, 50]
-      max_features: [null, 2, 5, 10, 'auto', 'log2']
       min_samples_split: [2, 10, 25, 50]
       random_state: [0]
   'sklearn.dummy.DummyClassifier':
