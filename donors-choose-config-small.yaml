@@ -1,4 +1,4 @@
-config_version: 'v7'
+config_version: 'v8'
 
 model_comment: 'quickstart test run'
 
@@ -22,8 +22,8 @@ temporal_config:
 
     # we sample every day, since new projects are posted
     # every day
-    training_as_of_date_frequencies: ['1day']
-    test_as_of_date_frequencies: ['1day']
+    training_as_of_date_frequencies: ['7day']
+    test_as_of_date_frequencies: ['7day']
     
     # like our project timeout
     training_label_timespans: ['4month']
@@ -111,133 +111,133 @@ feature_aggregations:
     # Since our time-aggregate features are precomputed, feature interval is 
     # irrelvant. We keep 'all' as a default.
     intervals: ['all'] 
-    groups: ['entity_id']
+    
 
-  -
-    prefix: 'resources_features'
-    from_obj: 'optimized.resources'
-    knowledge_date_column: 'date_posted'
+  # -
+  #   prefix: 'resources_features'
+  #   from_obj: 'optimized.resources'
+  #   knowledge_date_column: 'date_posted'
     
-    aggregates_imputation:
-      all:
-        type: 'zero'
+  #   aggregates_imputation:
+  #     all:
+  #       type: 'zero'
     
-    aggregates:
-      -
-        quantity: 'item_unit_price'
-        metrics:
-          - 'sum'
-      -
-        quantity: 'item_quantity'
-        metrics:
-          - 'sum'
-    intervals: ['all']
-    groups: ['entity_id']
+  #   aggregates:
+  #     -
+  #       quantity: 'item_unit_price'
+  #       metrics:
+  #         - 'sum'
+  #     -
+  #       quantity: 'item_quantity'
+  #       metrics:
+  #         - 'sum'
+  #   intervals: ['all']
+  #   groups: ['entity_id']
   
-  -
-    prefix: 'essay_features'
-    from_obj: 'optimized.essays'
-    knowledge_date_column: 'date_posted'
+  # -
+  #   prefix: 'essay_features'
+  #   from_obj: 'optimized.essays'
+  #   knowledge_date_column: 'date_posted'
 
-    aggregates_imputation:
-      all:
-        type: 'zero'
+  #   aggregates_imputation:
+  #     all:
+  #       type: 'zero'
 
-    aggregates:
-      -
-        quantity: 'length(essay)::int'
-        metrics:
-          - 'sum'
-    intervals: ['all']
-    groups: ['entity_id']
+  #   aggregates:
+  #     -
+  #       quantity: 'length(essay)::int'
+  #       metrics:
+  #         - 'sum'
+  #   intervals: ['all']
+  #   groups: ['entity_id']
 
-  -
-    prefix: 'donation_features'
-    from_obj: 'optimized.time_series_features'
-    knowledge_date_column: 'date_posted'
+  # -
+  #   prefix: 'donation_features'
+  #   from_obj: 'optimized.time_series_features'
+  #   knowledge_date_column: 'date_posted'
 
-    aggregates_imputation:
-      all:
-        type: 'constant'
-        value: 0 # for testing
+  #   aggregates_imputation:
+  #     all:
+  #       type: 'constant'
+  #       value: 0 # for testing
 
-    aggregates:
-      - # proportion of fully funded projects posted within the last year at the same district
-        quantity: 'district_funding_rate_1yr'
-        metrics:
-          - 'sum'
-      - # average donations per project posted within the last year at the same district
-        quantity: 'district_avg_donations_1yr'
-        metrics:
-          - 'sum'
-      - # proportion of fully funded projects posted within the last two years at the same district
-        quantity: 'district_funding_rate_2yr'
-        metrics:
-          - 'sum'
-      - # average donations per project posted within the two years at the same district
-        quantity: 'district_avg_donations_2yr'
-        metrics:
-          - 'sum'
+  #   aggregates:
+  #     - # proportion of fully funded projects posted within the last year at the same district
+  #       quantity: 'district_funding_rate_1yr'
+  #       metrics:
+  #         - 'sum'
+  #     - # average donations per project posted within the last year at the same district
+  #       quantity: 'district_avg_donations_1yr'
+  #       metrics:
+  #         - 'sum'
+  #     - # proportion of fully funded projects posted within the last two years at the same district
+  #       quantity: 'district_funding_rate_2yr'
+  #       metrics:
+  #         - 'sum'
+  #     - # average donations per project posted within the two years at the same district
+  #       quantity: 'district_avg_donations_2yr'
+  #       metrics:
+  #         - 'sum'
 
-        # teachers
-      - # proportion of fully funded projects posted within the last year by the same teacher
-        quantity: 'teacher_funding_rate_1yr'
-        metrics:
-          - 'sum'
-      - # average donations per project posted within the last year by the same teacher
-        quantity: 'teacher_avg_donations_1yr'
-        metrics:
-          - 'sum'
-      - # proportion of fully funded projects posted within the last two years by the same teacher
-        quantity: 'teacher_funding_rate_2yr'
-        metrics:
-          - 'sum'
-      - # average donations per project posted within the two years by the same teacher
-        quantity: 'teacher_avg_donations_2yr'
-        metrics:
-          - 'sum'
+  #       # teachers
+  #     - # proportion of fully funded projects posted within the last year by the same teacher
+  #       quantity: 'teacher_funding_rate_1yr'
+  #       metrics:
+  #         - 'sum'
+  #     - # average donations per project posted within the last year by the same teacher
+  #       quantity: 'teacher_avg_donations_1yr'
+  #       metrics:
+  #         - 'sum'
+  #     - # proportion of fully funded projects posted within the last two years by the same teacher
+  #       quantity: 'teacher_funding_rate_2yr'
+  #       metrics:
+  #         - 'sum'
+  #     - # average donations per project posted within the two years by the same teacher
+  #       quantity: 'teacher_avg_donations_2yr'
+  #       metrics:
+  #         - 'sum'
 
-        # zip
-      - # proportion of fully funded projects posted within the last year in the same zip code
-        quantity: 'zip_funding_rate_1yr'
-        metrics:
-          - 'sum'
-      - # average donations per project posted within the last year in the same zip code
-        quantity: 'zip_avg_donations_1yr'
-        metrics:
-          - 'sum'
-      - # proportion of fully funded projects posted within the last two years in the same zip code
-        quantity: 'zip_funding_rate_2yr'
-        metrics:
-          - 'sum'
-      - # average donations per project posted within the two years in the same zip code
-        quantity: 'zip_avg_donations_2yr'
-        metrics:
-          - 'sum'
+  #       # zip
+  #     - # proportion of fully funded projects posted within the last year in the same zip code
+  #       quantity: 'zip_funding_rate_1yr'
+  #       metrics:
+  #         - 'sum'
+  #     - # average donations per project posted within the last year in the same zip code
+  #       quantity: 'zip_avg_donations_1yr'
+  #       metrics:
+  #         - 'sum'
+  #     - # proportion of fully funded projects posted within the last two years in the same zip code
+  #       quantity: 'zip_funding_rate_2yr'
+  #       metrics:
+  #         - 'sum'
+  #     - # average donations per project posted within the two years in the same zip code
+  #       quantity: 'zip_avg_donations_2yr'
+  #       metrics:
+  #         - 'sum'
 
-    intervals: ['all']
-    groups: ['entity_id']
+  #   intervals: ['all']
+  #   groups: ['entity_id']
       
 grid_config:
-  'sklearn.ensemble.RandomForestClassifier':
-      n_estimators: [100]
-      max_depth: [5]
-      max_features: ['auto']
-      min_samples_split: [10]
+  # # 'sklearn.ensemble.RandomForestClassifier':
+  #     n_estimators: [100]
+  #     max_depth: [5]
+  #     max_features: ['auto']
+  #     min_samples_split: [10]
   'sklearn.linear_model.LogisticRegression':
       max_iter: [10000]
       penalty: ['l1', 'l2']
       C: [0.001, 0.01, 0.1, 0.5, 1]
       solver: ['saga']
-  'sklearn.tree.DecisionTreeClassifier':
-      max_depth: [2]
-      min_samples_split: [2, 10, 25, 50]
-      random_state: [0]
-  'sklearn.dummy.DummyClassifier':
-      # baseline, predicts base rate
-      strategy: ['prior']
-  'triage.component.catwalk.baselines.rankers.PercentileRankOneFeature':
-      feature: ['project_features_entity_id_all_total_asking_price_imp']
+  # 'sklearn.tree.DecisionTreeClassifier':
+  #     max_depth: [2]
+  #     min_samples_split: [2, 10, 25, 50]
+  #     random_state: [0]
+  # 'sklearn.dummy.DummyClassifier':
+  #     # baseline, predicts base rate
+  #     strategy: ['prior']
+  # 'triage.component.catwalk.baselines.rankers.PercentileRankOneFeature':
+  #     feature: ['project_features_entity_id_all_total_asking_price_imp']
 
 
 scoring:
