@@ -71,7 +71,11 @@ label_config:
 feature_aggregations:
   -
     prefix: 'project_features'
-    from_obj: 'optimized.projects'
+    from_obj: |
+      (select 
+        *, 
+        trim(split_part(poverty_level, ' ', 1)) as poverty_lvl
+      from optimized.projects) as prjct_feat
     knowledge_date_column: 'date_posted'
 
     aggregates_imputation:
@@ -94,10 +98,10 @@ feature_aggregations:
           - 'sum' 
         choice_query: 'select distinct resource_type from optimized.projects'
       -
-        column: 'poverty_level'
+        column: poverty_lvl
         metrics:
           - 'sum' 
-        choice_query: 'select distinct left(poverty_level, 8) from optimized.projects'
+        choice_query: "select distinct trim(split_part(poverty_level, ' ', 1)) from optimized.projects"
       -
         column: 'grade_level'
         metrics:
