@@ -21,11 +21,15 @@ fh = logging.FileHandler('triage.log', mode='w')
 fh.setFormatter(formatter)
 logger.addHandler(fh)
 
+ch = logging.StreamHandler()
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
 # creating database engine
 dbfile = 'database.yaml'
 
 dbconfig = yaml.load(open(dbfile), Loader=yaml.SafeLoader)
-db_url = URL.create(
+db_url = URL(
             'postgresql',
             host=dbconfig['host'],
             username=dbconfig['user'],
@@ -40,30 +44,32 @@ db_engine = create_engine(db_url, poolclass=NullPool)
 
 # loading config file
 # config_file = 'donors-choose-config.yaml'
-config_file = 'donors-choose-config-small.yaml'
+# config_file = 'donors-choose-config-small.yaml'
+config_file = 'subgrp_bias_discovery/experiment_config.yaml'
+
 with open(config_file, 'r') as fin:
     config = yaml.load(fin, Loader=yaml.SafeLoader)
 
 # generating temporal config plot
-chopper = Timechop(**config['temporal_config'])
+# chopper = Timechop(**config['temporal_config'])
 
 # We aren't interested in seeing the entire feature_start_time represented
 # in our timechop plot. That would hide the interesting information. So we
 # set it to equal label_start_time for the plot.
 
-chopper.feature_start_time = chopper.label_start_time 
+# chopper.feature_start_time = chopper.label_start_time 
 
-visualize_chops(chopper, save_target = 'triage_output/timechop.png')
+# visualize_chops(chopper, save_target = 'triage_output/timechop.png')
+
 
 # creating experiment object
-
 experiment = MultiCoreExperiment(
     config = config,
     db_engine = db_engine,
-    project_path = 's3://dsapp-education-migrated/donors-choose',
-    n_processes=2,
-    n_db_processes=2,
-    replace=False
+    project_path = '/mnt/data/experiment_data/donors/subgroup_bias_discovery/',
+    n_processes=8,
+    n_db_processes=4,
+    replace=True
 )
 
 # experiment = SingleThreadedExperiment(
