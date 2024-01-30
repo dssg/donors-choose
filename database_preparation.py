@@ -11,7 +11,9 @@ from triage.util.db import create_engine
 
 dbfile = 'database.yaml'
 
-dbconfig = yaml.load(open(dbfile))
+with open(dbfile, "r") as f:
+    dbconfig = yaml.safe_load(f)
+
 db_url = URL(
             'postgres',
             host=dbconfig['host'],
