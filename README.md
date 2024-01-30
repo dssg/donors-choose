@@ -9,7 +9,7 @@
 2. Create a new python environment and install python prerequisites from requirements.txt:
 
         `pip install -r requirements.txt`
-3. Create a [database.yaml file](https://github.com/dssg/triage/blob/master/example/database.yaml) with your credentials.
+3. Create a [database.yaml file](https://github.com/dssg/triage/blob/master/example/config/database.yaml) with your credentials.
 
 ### How to use
 
