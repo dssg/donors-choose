@@ -3,7 +3,7 @@
 -- changes projectid to an int key
 -- 
 -- sets projectid as projects primary key & donations foreign key
--- for indexes
+-- for indices
 
 DROP TABLE if exists optimized.donations;
 DROP TABLE if exists optimized.projects CASCADE;
@@ -33,13 +33,13 @@ ALTER TABLE optimized.projects
 
 -- projectid_str_short for quicker joins when updating other tables
 
-ALTER TABLE optimized.PROJECTS
+ALTER TABLE optimized.projects
 	ADD COLUMN projectid_str_short varchar;
 
-UPDATE optimized.PROJECTS 
+UPDATE optimized.projects 
 	SET projectid_str_short = substring(projectid_str FROM 1 FOR 10);
 
-ALTER TABLE OPTIMIZED.projects
+ALTER TABLE optimized.projects
 	ADD COLUMN entity_id serial NOT NULL PRIMARY KEY;
 
 -- updating projectid in donations
@@ -57,7 +57,7 @@ ALTER TABLE optimized.donations
 	
 UPDATE optimized.donations
 	SET entity_id = projects.entity_id
-	FROM optimized.PROJECTS 
+	FROM optimized.projects 
 	WHERE donations.projectid_str_short = projects.projectid_str_short;
 
 -- essays
@@ -75,7 +75,7 @@ ALTER TABLE optimized.essays
 	
 UPDATE optimized.essays
 	SET entity_id = projects.entity_id
-	FROM optimized.PROJECTS 
+	FROM optimized.projects 
 	WHERE essays.projectid_str_short = projects.projectid_str_short;
 
 ALTER TABLE optimized.essays
@@ -101,7 +101,7 @@ ALTER TABLE optimized.resources
 	
 UPDATE optimized.resources
 	SET entity_id = projects.entity_id
-	FROM optimized.PROJECTS 
+	FROM optimized.projects 
 	WHERE resources.projectid_str_short = projects.projectid_str_short;
 
 ALTER TABLE optimized.resources
@@ -128,7 +128,7 @@ ALTER TABLE optimized.outcomes
 	
 UPDATE optimized.outcomes
 	SET entity_id = projects.entity_id
-	FROM optimized.PROJECTS 
+	FROM optimized.projects 
 	WHERE outcomes.projectid_str_short = projects.projectid_str_short;
 
 ALTER TABLE optimized.projects DROP COLUMN projectid_str_short;
@@ -139,10 +139,10 @@ ALTER TABLE optimized.outcomes DROP COLUMN projectid_str_short;
 
 ALTER TABLE optimized.projects DROP CONSTRAINT projects_pkey CASCADE;
 
-ALTER TABLE optimized.projects ADD PRIMARY KEY (projectid);
-ALTER TABLE optimized.donations ADD CONSTRAINT donations_fkey FOREIGN KEY (projectid) REFERENCES optimized.projects (entity_id);
+ALTER TABLE optimized.projects ADD PRIMARY KEY (entity_id);
+ALTER TABLE optimized.donations ADD CONSTRAINT donations_fkey FOREIGN KEY (entity_id) REFERENCES optimized.projects (entity_id);
 
 
 -- This column name is too long for triage to handle. Renaming to someting shorter.
 ALTER TABLE optimized.projects
-RENAME total_price_excluding_optional_support TO total_asking_price
+RENAME total_price_excluding_optional_support TO total_asking_price;
