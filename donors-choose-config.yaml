@@ -1,6 +1,7 @@
-config_version: 'v7'
+config_version: 'v8'
 
 model_comment: 'quickstart test run'
+random_seed: 1995
 
 temporal_config:
 
@@ -26,8 +27,8 @@ temporal_config:
     test_as_of_date_frequencies: ['1day']
     
     # like our project timeout
-    training_label_timespans: ['4month']
-    test_label_timespans: ['4month']
+    label_timespans: ['4month']
+    
     
 
 cohort_config:
@@ -111,7 +112,6 @@ feature_aggregations:
     # Since our time-aggregate features are precomputed, feature interval is 
     # irrelvant. We keep 'all' as a default.
     intervals: ['all'] 
-    groups: ['entity_id']
 
   -
     prefix: 'resources_features'
@@ -132,7 +132,6 @@ feature_aggregations:
         metrics:
           - 'sum'
     intervals: ['all']
-    groups: ['entity_id']
   
   -
     prefix: 'essay_features'
@@ -149,7 +148,6 @@ feature_aggregations:
         metrics:
           - 'sum'
     intervals: ['all']
-    groups: ['entity_id']
 
   -
     prefix: 'donation_features'
@@ -216,7 +214,6 @@ feature_aggregations:
           - 'sum'
 
     intervals: ['all']
-    groups: ['entity_id']
       
 grid_config:
   'sklearn.ensemble.RandomForestClassifier':
@@ -236,8 +233,11 @@ grid_config:
   'sklearn.dummy.DummyClassifier':
       # baseline, predicts base rate
       strategy: ['prior']
-  'triage.component.catwalk.baselines.rankers.PercentileRankOneFeature':
-      feature: ['project_features_entity_id_all_total_asking_price_imp']
+  'triage.component.catwalk.baselines.rankers.BaselineRankMultiFeature':
+      rules: 
+        - [{feature: 'project_features_entity_id_all_total_asking_price_imp', low_value_high_score: False}] 
+  #'triage.component.catwalk.baselines.rankers.PercentileRankOneFeature':
+  #    feature: ['project_features_entity_id_all_total_asking_price_imp']
 
 
 scoring:
@@ -247,4 +247,4 @@ scoring:
           thresholds:
             top_n: [50]
 
-random_seed: 1995
+
