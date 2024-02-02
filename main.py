@@ -1,48 +1,48 @@
 import yaml
+import logging
 
+from datetime import datetime 
 from sqlalchemy.engine.url import URL
-from triage.util.db import create_engine
 from sqlalchemy import create_engine as engine_creator
+from sqlalchemy.pool import NullPool
+
+from triage.util.db import create_engine
 from triage.component.timechop import Timechop
 from triage.component.timechop.plotting import visualize_chops
 from triage.component.architect.feature_generators import FeatureGenerator
 from triage.experiments import MultiCoreExperiment, SingleThreadedExperiment
-import logging
 
-from sqlalchemy.pool import NullPool
 
 # import os
 # os.chdir('donors-choose')
-
+now = datetime.now()
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-fh = logging.FileHandler('triage.log', mode='w')
+logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(name)-30s  %(asctime)s %(levelname)10s %(process)6d  %(filename)-24s  %(lineno)4d: %(message)s', '%d/%m/%Y %I:%M:%S %p')
+fh = logging.FileHandler(f'triage_{now}.log', mode='w')
 fh.setFormatter(formatter)
 logger.addHandler(fh)
 
 # creating database engine
 dbfile = 'database.yaml'
 
-dbconfig = yaml.load(open(dbfile), Loader=yaml.SafeLoader)
-db_url = URL.create(
-            'postgresql',
-            host=dbconfig['host'],
-            username=dbconfig['user'],
-            database=dbconfig['db'],
-            password=dbconfig['pass'],
-            port=dbconfig['port'],
-        )
+with open(dbfile, "r") as f:
+    dbconfig = yaml.safe_load(f)
 
-# db_url = f"postgresql://{dbconfig['user']}:{dbconfig['pass']}@{dbconfig['host']}:{dbconfig['port']}/{dbconfig['db']}"
-db_engine = create_engine(db_url, poolclass=NullPool)
+host = dbconfig['host']
+user = dbconfig['user']
+database = dbconfig['db']
+password = dbconfig['pass']
+port = dbconfig['port']
+        
+db_engine = create_engine(f'postgresql://{user}:{password}@{host}:{port}/{database}')
 
 
 # loading config file
-# config_file = 'donors-choose-config.yaml'
+#config_file = 'donors-choose-config.yaml'
 config_file = 'donors-choose-config-small.yaml'
 with open(config_file, 'r') as fin:
-    config = yaml.load(fin, Loader=yaml.SafeLoader)
+    config = yaml.safe_load(fin)
 
 # generating temporal config plot
 chopper = Timechop(**config['temporal_config'])
@@ -63,14 +63,16 @@ experiment = MultiCoreExperiment(
     project_path = 's3://dsapp-education-migrated/donors-choose',
     n_processes=2,
     n_db_processes=2,
-    replace=False
+    replace=False,
+    save_predictions=False
 )
 
 # experiment = SingleThreadedExperiment(
 #     config = config,
 #     db_engine = db_engine,
 #     project_path = 's3://dsapp-education-migrated/donors-choose',
-#     replace=True
+#     replace=False,
+#     save_predictions=False
 # )
 
 experiment.validate()
