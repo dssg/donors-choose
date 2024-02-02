@@ -237,8 +237,6 @@ grid_config:
   'triage.component.catwalk.baselines.rankers.BaselineRankMultiFeature':
       rules: 
         - [{feature: 'project_features_entity_id_all_total_asking_price_sum', low_value_high_score: False}] 
-  #'triage.component.catwalk.baselines.rankers.PercentileRankOneFeature':
-  #    feature: ['project_features_entity_id_all_total_asking_price_imp']
 
 
 scoring:
