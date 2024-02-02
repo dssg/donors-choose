@@ -27,7 +27,8 @@ temporal_config:
     test_as_of_date_frequencies: ['1day']
     
     # like our project timeout
-    label_timespans: ['4month']
+    training_label_timespans: ['4month']
+    test_label_timespans: ['4month']
     
     
 
@@ -221,7 +222,7 @@ grid_config:
       max_depth: [2, 5, 10, 50]
       max_features: [3, 5, 8, 10, 12, 15, 'auto', 'log2']
       min_samples_split: [2, 10, 25, 50]
-  'sklearn.linear_model.LogisticRegression':
+  'triage.component.catwalk.estimators.classifiers.ScaledLogisticRegression':
       max_iter: [10000]
       penalty: ['l1', 'l2']
       C: [0.001, 0.01, 0.1, 0.5, 1, 2, 10]
@@ -235,7 +236,7 @@ grid_config:
       strategy: ['prior']
   'triage.component.catwalk.baselines.rankers.BaselineRankMultiFeature':
       rules: 
-        - [{feature: 'project_features_entity_id_all_total_asking_price_imp', low_value_high_score: False}] 
+        - [{feature: 'project_features_entity_id_all_total_asking_price_sum', low_value_high_score: False}] 
   #'triage.component.catwalk.baselines.rankers.PercentileRankOneFeature':
   #    feature: ['project_features_entity_id_all_total_asking_price_imp']
 
