@@ -17,7 +17,7 @@ from triage.experiments import MultiCoreExperiment, SingleThreadedExperiment
 # os.chdir('donors-choose')
 now = datetime.now()
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(name)-30s  %(asctime)s %(levelname)10s %(process)6d  %(filename)-24s  %(lineno)4d: %(message)s', '%d/%m/%Y %I:%M:%S %p')
 fh = logging.FileHandler(f'triage_{now}.log', mode='w')
 fh.setFormatter(formatter)
@@ -61,7 +61,7 @@ experiment = MultiCoreExperiment(
     config = config,
     db_engine = db_engine,
     project_path = 's3://dsapp-education-migrated/donors-choose',
-    n_processes=2,
+    n_processes=3,
     n_db_processes=2,
     replace=False,
     save_predictions=False
@@ -75,5 +75,5 @@ experiment = MultiCoreExperiment(
 #     save_predictions=False
 # )
 
-experiment.validate()
+#experiment.validate()
 experiment.run()
