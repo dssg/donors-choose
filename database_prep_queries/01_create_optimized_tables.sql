@@ -4,27 +4,29 @@
 -- 
 -- sets projectid as projects primary key & donations foreign key
 -- for indices
+set role {role};
 
-DROP TABLE if exists optimized.donations;
-DROP TABLE if exists optimized.projects CASCADE;
-DROP TABLE if exists optimized.ESSAYS;
-DROP TABLE IF EXISTS optimized.resources;
-DROP TABLE IF EXISTS optimized.outcomes;
+--DROP TABLE if exists optimized.donations;
+--DROP TABLE if exists optimized.projects CASCADE;
+--DROP TABLE if exists optimized.ESSAYS;
+--DROP TABLE IF EXISTS optimized.resources;
+--DROP TABLE IF EXISTS optimized.outcomes;
 
-DROP SCHEMA if exists optimized;
+DROP SCHEMA if exists optimized CASCADE;
 
 CREATE SCHEMA optimized;
 
-GRANT ALL PRIVILEGES ON SCHEMA optimized TO rg_staff;
+GRANT ALL PRIVILEGES ON SCHEMA optimized TO {role};
 
-ALTER DEFAULT PRIVILEGES IN SCHEMA optimized GRANT ALL PRIVILEGES ON TABLES TO rg_staff;
-ALTER DEFAULT PRIVILEGES IN SCHEMA optimized GRANT USAGE          ON SEQUENCES TO rg_staff;
+ALTER DEFAULT PRIVILEGES IN SCHEMA optimized GRANT ALL PRIVILEGES ON TABLES TO {role};
+ALTER DEFAULT PRIVILEGES IN SCHEMA optimized GRANT USAGE          ON SEQUENCES TO {role};
 
 CREATE TABLE optimized.projects AS (SELECT * FROM public.projects);
 CREATE TABLE optimized.donations AS (SELECT * FROM public.donations);
 CREATE TABLE optimized.essays AS (SELECT * FROM public.essays);
 CREATE TABLE optimized.outcomes AS (SELECT * FROM public.outcomes);
 CREATE TABLE optimized.resources AS (SELECT * FROM public.resources);
+
 
 -- creating int projectid in projects
 
@@ -146,3 +148,5 @@ ALTER TABLE optimized.donations ADD CONSTRAINT donations_fkey FOREIGN KEY (entit
 -- This column name is too long for triage to handle. Renaming to someting shorter.
 ALTER TABLE optimized.projects
 RENAME total_price_excluding_optional_support TO total_asking_price;
+
+COMMIT;

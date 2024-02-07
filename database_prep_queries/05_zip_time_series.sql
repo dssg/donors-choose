@@ -1,4 +1,5 @@
 -- see district_time_series.sql for documentation on these big nasty queries
+set role {role};
 
 ALTER TABLE optimized.time_series_features
 ADD COLUMN zip_avg_donations_1yr NUMERIC,
@@ -168,3 +169,5 @@ UPDATE optimized.time_series_features
 SET zip_funding_rate_2yr = funding_rate_summary.funding_rate
 FROM funding_rate_summary
 WHERE time_series_features.entity_id = funding_rate_summary.entity_id;
+
+COMMIT;

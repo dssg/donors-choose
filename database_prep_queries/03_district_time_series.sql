@@ -2,6 +2,7 @@
 -- a given project was started, at the same school district, within the last 1 and 2 years.
 -- 
 -- The other queries in this directory do the same, but per-teacher and zip code.
+set role {role};
 
 ALTER TABLE optimized.time_series_features
 	ADD COLUMN district_avg_donations_1yr NUMERIC,
@@ -170,3 +171,5 @@ UPDATE optimized.time_series_features
 SET district_funding_rate_2yr = funding_rate_summary.funding_rate
 FROM funding_rate_summary
 WHERE time_series_features.entity_id = funding_rate_summary.entity_id;
+
+COMMIT;
