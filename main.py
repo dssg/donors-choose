@@ -3,7 +3,6 @@ import logging
 
 from datetime import datetime 
 from sqlalchemy.engine.url import URL
-from sqlalchemy import create_engine as engine_creator
 from sqlalchemy.pool import NullPool
 
 from triage.util.db import create_engine
@@ -29,14 +28,16 @@ dbfile = 'database.yaml'
 with open(dbfile, "r") as f:
     dbconfig = yaml.safe_load(f)
 
-host = dbconfig['host']
-user = dbconfig['user']
-database = dbconfig['db']
-password = dbconfig['pass']
-port = dbconfig['port']
-        
-db_engine = create_engine(f'postgresql://{user}:{password}@{host}:{port}/{database}')
+db_url = URL(
+            'postgres',
+            host=dbconfig['host'],
+            username=dbconfig['user'],
+            database=dbconfig['db'],
+            password=dbconfig['pass'],
+            port=dbconfig['port'],
+        )
 
+db_engine = create_engine(db_url)
 
 # loading config file
 #config_file = 'donors-choose-config.yaml'
