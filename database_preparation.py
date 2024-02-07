@@ -31,4 +31,7 @@ for file in queries:
     with open('database_prep_queries/' + file, 'r') as fin:
         query = fin.read()
     
-    db_engine.execute(query)
+    db_engine.execute(query.format(role=dbconfig['role']))
+
+
+
