@@ -1,6 +1,7 @@
-config_version: 'v7'
+config_version: 'v8'
 
 model_comment: 'quickstart test run'
+random_seed: 1995
 
 temporal_config:
 
@@ -28,6 +29,7 @@ temporal_config:
     # like our project timeout
     training_label_timespans: ['4month']
     test_label_timespans: ['4month']
+    
     
 
 cohort_config:
@@ -111,7 +113,6 @@ feature_aggregations:
     # Since our time-aggregate features are precomputed, feature interval is 
     # irrelvant. We keep 'all' as a default.
     intervals: ['all'] 
-    groups: ['entity_id']
 
   -
     prefix: 'resources_features'
@@ -132,7 +133,6 @@ feature_aggregations:
         metrics:
           - 'sum'
     intervals: ['all']
-    groups: ['entity_id']
   
   -
     prefix: 'essay_features'
@@ -149,7 +149,6 @@ feature_aggregations:
         metrics:
           - 'sum'
     intervals: ['all']
-    groups: ['entity_id']
 
   -
     prefix: 'donation_features'
@@ -216,7 +215,6 @@ feature_aggregations:
           - 'sum'
 
     intervals: ['all']
-    groups: ['entity_id']
       
 grid_config:
   'sklearn.ensemble.RandomForestClassifier':
@@ -224,7 +222,7 @@ grid_config:
       max_depth: [2, 5, 10, 50]
       max_features: [3, 5, 8, 10, 12, 15, 'auto', 'log2']
       min_samples_split: [2, 10, 25, 50]
-  'sklearn.linear_model.LogisticRegression':
+  'triage.component.catwalk.estimators.classifiers.ScaledLogisticRegression':
       max_iter: [10000]
       penalty: ['l1', 'l2']
       C: [0.001, 0.01, 0.1, 0.5, 1, 2, 10]
@@ -236,8 +234,9 @@ grid_config:
   'sklearn.dummy.DummyClassifier':
       # baseline, predicts base rate
       strategy: ['prior']
-  'triage.component.catwalk.baselines.rankers.PercentileRankOneFeature':
-      feature: ['project_features_entity_id_all_total_asking_price_imp']
+  'triage.component.catwalk.baselines.rankers.BaselineRankMultiFeature':
+      rules: 
+        - [{feature: 'project_features_entity_id_all_total_asking_price_sum', low_value_high_score: False}] 
 
 
 scoring:
@@ -247,4 +246,4 @@ scoring:
           thresholds:
             top_n: [50]
 
-random_seed: 1995
+
