@@ -19,7 +19,7 @@ temporal_config:
     # length of time defining a test set
     test_durations: ['1month']
     # defines how far back a training set reaches
-    max_training_histories: ['1month']
+    max_training_histories: ['12month']
 
     # we sample every day, since new projects are posted
     # every day
@@ -220,7 +220,7 @@ grid_config:
   'sklearn.ensemble.RandomForestClassifier':
       n_estimators: [1000, 2500, 5000, 10000]
       max_depth: [2, 5, 10, 50]
-      max_features: [3, 5, 8, 10, 12, 15, 'auto', 'log2']
+      max_features: ['sqrt', 'auto', 'log2']
       min_samples_split: [2, 10, 25, 50]
   'triage.component.catwalk.estimators.classifiers.ScaledLogisticRegression':
       max_iter: [10000]
