@@ -1,3 +1,4 @@
+import os
 import yaml
 import logging
 
@@ -23,25 +24,36 @@ fh.setFormatter(formatter)
 logger.addHandler(fh)
 
 # creating database engine
-dbfile = 'database.yaml'
+# dbfile = 'database.yaml'
 
-with open(dbfile, "r") as f:
-    dbconfig = yaml.safe_load(f)
+# with open(dbfile, "r") as f:
+#     dbconfig = yaml.safe_load(f)
 
+# db_url = URL(
+#             'postgres',
+#             host=dbconfig['host'],
+#             username=dbconfig['user'],
+#             database=dbconfig['db'],
+#             password=dbconfig['pass'],
+#             port=dbconfig['port'],
+#         )
+
+# TODO - Create a function that either uses the environmental variables or a database.yaml file
 db_url = URL(
-            'postgres',
-            host=dbconfig['host'],
-            username=dbconfig['user'],
-            database=dbconfig['db'],
-            password=dbconfig['pass'],
-            port=dbconfig['port'],
-        )
+    'postgres',
+    host=os.getenv('PGHOST'),
+    username=os.getenv('PGUSER'),
+    database=os.getenv('PGDATABASE'),
+    password=os.getenv('PGPASSWORD'),
+    port=os.getenv('PGPORT'),
+)
 
 db_engine = create_engine(db_url)
 
 # loading config file
-#config_file = 'donors-choose-config.yaml'
-config_file = 'donors-choose-config-small.yaml'
+config_file = 'donors-choose-config.yaml'
+
+# config_file = 'donors-choose-config-small.yaml'
 with open(config_file, 'r') as fin:
     config = yaml.safe_load(fin)
 
@@ -62,7 +74,7 @@ experiment = MultiCoreExperiment(
     config = config,
     db_engine = db_engine,
     project_path = 's3://dsapp-education-migrated/donors-choose',
-    n_processes=3,
+    n_processes=4,
     n_db_processes=2,
     replace=False,
     save_predictions=False
