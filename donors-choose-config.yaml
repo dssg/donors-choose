@@ -266,6 +266,32 @@ scoring:
           thresholds:
             percentiles: [1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 
+    subsets:
+      - 
+        name: 'poor'
+        query: |
+          select 
+          entity_id
+          from optimized.projects
+          where poverty_level in ('high_poverty', 'highest poverty')
+
+      - 
+        name: 'urban'
+        query: |
+          select 
+          entity_id
+          from optimized.projects
+          where school_metro = 'urban'
+
+      - 
+        name: 'rural'
+        query: |
+          select 
+          entity_id
+          from optimized.projects
+          where school_metro = 'rural'
+        
+
 
 bias_audit_config:
     from_obj_table: 'optimized.projects'
