@@ -217,26 +217,30 @@ feature_aggregations:
     intervals: ['all']
       
 grid_config:
-  # 'sklearn.ensemble.RandomForestClassifier':
-  #     n_estimators: [1000, 2500, 5000, 10000]
-  #     max_depth: [2, 5, 10, 50]
-  #     max_features: ['sqrt', 'auto', 'log2']
-  #     min_samples_split: [2, 10, 25, 50]
-  # 'triage.component.catwalk.estimators.classifiers.ScaledLogisticRegression':
-  #     max_iter: [10000]
-  #     penalty: ['l1', 'l2']
-  #     C: [0.001, 0.01, 0.1, 0.5, 1, 2, 10]
-  #     solver: ['saga']
-  # 'sklearn.tree.DecisionTreeClassifier':
-  #     max_depth: [2, 5, 10, 50]
-  #     min_samples_split: [2, 10, 25, 50]
-  #     random_state: [0]
+  'sklearn.ensemble.RandomForestClassifier':
+      n_estimators: [1000, 2500, 5000, 10000]
+      max_depth: [2, 5, 10, 50]
+      max_features: ['sqrt', 'auto', 'log2']
+      min_samples_split: [2, 10, 25, 50]
+
+  'triage.component.catwalk.estimators.classifiers.ScaledLogisticRegression':
+      max_iter: [10000]
+      penalty: ['l1', 'l2']
+      C: [0.001, 0.01, 0.1, 0.5, 1, 2, 10]
+      solver: ['saga']
+
+  'sklearn.tree.DecisionTreeClassifier':
+      max_depth: [2, 5, 10, 50]
+      min_samples_split: [2, 10, 25, 50]
+      random_state: [0]
+  
   'sklearn.dummy.DummyClassifier':
       # baseline, predicts base rate
       strategy: ['prior']
-  # 'triage.component.catwalk.baselines.rankers.BaselineRankMultiFeature':
-  #     rules: 
-  #       - [{feature: 'project_features_entity_id_all_total_asking_price_sum', low_value_high_score: False}] 
+  
+  'triage.component.catwalk.baselines.rankers.BaselineRankMultiFeature':
+      rules: 
+        - [{feature: 'project_features_entity_id_all_total_asking_price_sum', low_value_high_score: False}] 
 
 
 scoring:
