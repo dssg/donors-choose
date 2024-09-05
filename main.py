@@ -1,6 +1,7 @@
 import os
 import yaml
 import logging
+import shutil
 
 from datetime import datetime 
 from sqlalchemy.engine.url import URL
@@ -80,13 +81,23 @@ experiment = MultiCoreExperiment(
     save_predictions=False
 )
 
-# experiment = SingleThreadedExperiment(
-#     config = config,
-#     db_engine = db_engine,
-#     project_path = 's3://dsapp-education-migrated/donors-choose',
-#     replace=False,
-#     save_predictions=False
-# )
+experiment = SingleThreadedExperiment(
+    config = config,
+    db_engine = db_engine,
+    project_path = 's3://dsapp-education-migrated/donors-choose',
+    replace=False,
+    save_predictions=False
+)
 
-#experiment.validate()
+experiment.validate()
 experiment.run()
+
+
+# Creating the Triage experiment Report
+template_path = 'notebooks/triage_experiment_report_template.ipynb'
+
+timestamp = datetime.now().strftime('%Y%m%d_%H%M')
+output_path = f'notebooks/triage_experiment_report_{timestamp}.ipynb'
+shutil.copyfile(template_path, output_path)
+os.system(f'jupyter nbconvert --inplace --execute --to notebook {output_path}')
+os.system(f'jupyter nbconvert --to html {output_path}')
