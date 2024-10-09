@@ -232,7 +232,6 @@ grid_config:
   # 'sklearn.tree.DecisionTreeClassifier':
   #     max_depth: [2]
   #     min_samples_split: [2, 10, 25, 50]
-  #     random_state: [0]
   # 'sklearn.dummy.DummyClassifier':
   #     # baseline, predicts base rate
   #     strategy: ['prior']
