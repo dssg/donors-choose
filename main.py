@@ -71,15 +71,15 @@ visualize_chops(chopper, save_target = 'triage_output/timechop.png')
 
 # creating experiment object
 
-experiment = MultiCoreExperiment(
-    config = config,
-    db_engine = db_engine,
-    project_path = 's3://dsapp-education-migrated/donors-choose',
-    n_processes=4,
-    n_db_processes=2,
-    replace=False,
-    save_predictions=False
-)
+# experiment = MultiCoreExperiment(
+#     config = config,
+#     db_engine = db_engine,
+#     project_path = 's3://dsapp-education-migrated/donors-choose',
+#     n_processes=4,
+#     n_db_processes=2,
+#     replace=False,
+#     save_predictions=False
+# )
 
 experiment = SingleThreadedExperiment(
     config = config,
