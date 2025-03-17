@@ -25,36 +25,34 @@ fh.setFormatter(formatter)
 logger.addHandler(fh)
 
 # creating database engine
-# dbfile = 'database.yaml'
+dbfile = 'database.yaml'
 
-# with open(dbfile, "r") as f:
-#     dbconfig = yaml.safe_load(f)
+with open(dbfile, "r") as f:
+    dbconfig = yaml.safe_load(f)
+
+db_url = URL(
+            'postgres',
+            host=dbconfig['host'],
+            username=dbconfig['user'],
+            database=dbconfig['db'],
+            password=dbconfig['pass'],
+            port=dbconfig['port'],
+        )
 
 # db_url = URL(
-#             'postgres',
-#             host=dbconfig['host'],
-#             username=dbconfig['user'],
-#             database=dbconfig['db'],
-#             password=dbconfig['pass'],
-#             port=dbconfig['port'],
-#         )
-
-# TODO - Create a function that either uses the environmental variables or a database.yaml file
-db_url = URL(
-    'postgres',
-    host=os.getenv('PGHOST'),
-    username=os.getenv('PGUSER'),
-    database=os.getenv('PGDATABASE'),
-    password=os.getenv('PGPASSWORD'),
-    port=os.getenv('PGPORT'),
-)
+#     'postgres',
+#     host=os.getenv('PGHOST'),
+#     username=os.getenv('PGUSER'),
+#     database=os.getenv('PGDATABASE'),
+#     password=os.getenv('PGPASSWORD'),
+#     port=os.getenv('PGPORT'),
+# )
 
 db_engine = create_engine(db_url)
 
 # loading config file
 config_file = 'donors-choose-config.yaml'
-
-# config_file = 'donors-choose-config-small.yaml'
+#config_file = 'donors-choose-config-small.yaml'
 with open(config_file, 'r') as fin:
     config = yaml.safe_load(fin)
 
@@ -71,33 +69,38 @@ visualize_chops(chopper, save_target = 'triage_output/timechop.png')
 
 # creating experiment object
 
-# experiment = MultiCoreExperiment(
-#     config = config,
-#     db_engine = db_engine,
-#     project_path = 's3://dsapp-education-migrated/donors-choose',
-#     n_processes=4,
-#     n_db_processes=2,
-#     replace=False,
-#     save_predictions=False
-# )
-
-experiment = SingleThreadedExperiment(
+experiment = MultiCoreExperiment(
     config = config,
     db_engine = db_engine,
-    project_path = 's3://dsapp-education-migrated/donors-choose',
+    project_path = 's3://cmu-dsapp-education/donors-choose',
+    n_processes=4,
+    n_db_processes=2,
     replace=False,
     save_predictions=False
 )
 
-experiment.validate()
-experiment.run()
-
+# experiment = SingleThreadedExperiment(
+#     config = config,
+#     db_engine = db_engine,
+#     project_path = 's3://cmu-dsapp-education/donors-choose',
+#     replace=False,
+#     save_predictions=False
+# )
 
 # Creating the Triage experiment Report
-template_path = 'notebooks/triage_experiment_report_template.ipynb'
+def generate_experiment_report():
 
-timestamp = datetime.now().strftime('%Y%m%d_%H%M')
-output_path = f'notebooks/triage_experiment_report_{timestamp}.ipynb'
-shutil.copyfile(template_path, output_path)
-os.system(f'jupyter nbconvert --inplace --execute --to notebook {output_path}')
-os.system(f'jupyter nbconvert --to html {output_path}')
+    # Path to where you save the notebook template in 
+    template_path = '/notebooks/triage_experiment_report_template.ipynb'
+
+    # Specify where you will save the executed notebook (recommend not to overwrite the template)
+    output_path = '/notebooks/experiment_summary_report.ipynb'
+
+    shutil.copyfile(template_path, output_path)
+
+    os.system(f'jupyter nbconvert --execute --inplace --to notebook {output_path}')
+    os.system(f'jupyter nbconvert {output_path} --to html')
+
+experiment.validate()
+experiment.run()
+generate_experiment_report()
