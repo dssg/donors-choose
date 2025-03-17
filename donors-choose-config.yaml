@@ -296,9 +296,11 @@ scoring:
           from optimized.projects
           where school_metro = 'rural'
           and date_posted < '{as_of_date}'::date
+
+    # for experiment report summary
+    priority_metric: 'precision@'
+    priority_parameter: '50_abs' 
         
-
-
 bias_audit_config:
     from_obj_table: 'optimized.projects'
     attribute_columns:
@@ -312,5 +314,8 @@ bias_audit_config:
         percentiles: [1, 5, 10, 15, 20, 25, 50, 100]
         top_n: [50, 100, 200, 500, 1000]
 
-
-
+# for experiment report summary
+bias_audit:
+    priority_metric: 'tpr_disparity'
+    priority_groups:
+      'teacher_prefix': ['Mr.', 'Dr.', 'Mrs.', 'Ms.']
