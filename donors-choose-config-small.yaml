@@ -1,5 +1,5 @@
 config_version: 'v8'
-random_seed: 1995
+random_seed: 202410223
 
 model_comment: 'quickstart test run'
 
@@ -55,6 +55,8 @@ label_config:
 
   name: 'quickstart_label'
 
+user_metadata:
+  comment: 'Testing triage version 5.3.3'
 
 feature_aggregations:
   -
@@ -219,32 +221,83 @@ feature_aggregations:
   #   groups: ['entity_id']
       
 grid_config:
-    # 'sklearn.ensemble.RandomForestClassifier':
-    #   n_estimators: [100]
-    #   max_depth: [5]
-    #   max_features: ['auto']
-    #   min_samples_split: [10]
+  'sklearn.ensemble.RandomForestClassifier':
+      n_estimators: [100]
+      max_depth: [5]
+      max_features: ['auto']
+      min_samples_split: [10]
   'triage.component.catwalk.estimators.classifiers.ScaledLogisticRegression':
       max_iter: [10000]
       penalty: ['l1', 'l2']
       C: [0.001, 0.01, 0.1, 0.5, 1]
       solver: ['saga']
-  # 'sklearn.tree.DecisionTreeClassifier':
-  #     max_depth: [2]
-  #     min_samples_split: [2, 10, 25, 50]
-  # 'sklearn.dummy.DummyClassifier':
-  #     # baseline, predicts base rate
-  #     strategy: ['prior']
-    # 'triage.component.catwalk.baselines.rankers.BaselineRankMultiFeature':
-    #   rules: 
-    #     - [{feature: 'project_features_entity_id_all_total_asking_price_sum', low_value_high_score: False}] 
+  'sklearn.tree.DecisionTreeClassifier':
+      max_depth: [2]
+      min_samples_split: [2]
+  'sklearn.dummy.DummyClassifier':
+      # baseline, predicts base rate
+      strategy: ['prior']
+  'triage.component.catwalk.baselines.rankers.BaselineRankMultiFeature':
+      rules: 
+        - [{feature: 'project_features_entity_id_all_total_asking_price_sum', low_value_high_score: False}] 
+      random_state: [5556]
 
 
 scoring:
-    testing_metric_groups:
-        -
-          metrics: [precision@]
-          thresholds:
-            top_n: [50]
+  testing_metric_groups:
+    -
+      metrics: [precision@, recall@]
+      thresholds:
+        top_n: [50, 100]
+      # Append these key-value pairs to the scoring section
 
+  subsets:
+    - 
+      name: 'poor'
+      query: |
+        select 
+        entity_id
+        from optimized.projects
+        where poverty_level in ('high_poverty', 'highest poverty')
+        and date_posted < '{as_of_date}'::date
 
+    - 
+      name: 'urban'
+      query: |
+        select 
+        entity_id
+        from optimized.projects
+        where school_metro = 'urban'
+        and date_posted < '{as_of_date}'::date
+
+    - 
+      name: 'rural'
+      query: |
+        select 
+        entity_id
+        from optimized.projects
+        where school_metro = 'rural'
+        and date_posted < '{as_of_date}'::date
+
+  # for experiment report summary
+  priority_metric: 'precision@'
+  priority_parameter: '50_abs' 
+
+bias_audit_config:
+    from_obj_table: 'optimized.projects'
+    attribute_columns:
+        - 'teacher_prefix'
+    knowledge_date_column: 'date_posted'
+    entity_id_column: 'entity_id'
+    ref_groups_method: 'predefined'
+    ref_groups:
+        'teacher_prefix': 'Mr.'
+    thresholds:
+        percentiles: [1, 5, 10, 25, 50, 100]
+        top_n: [50, 100]
+
+# for experiment report summary
+bias_audit:
+    priority_metric: 'tpr_disparity'
+    priority_groups:
+      'teacher_prefix': ['Mr.', 'Dr.', 'Mrs.', 'Ms.']
