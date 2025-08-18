@@ -18,7 +18,7 @@ from triage.experiments import MultiCoreExperiment, SingleThreadedExperiment
 # os.chdir('donors-choose')
 now = datetime.now()
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.INFOP)
 formatter = logging.Formatter('%(name)-30s  %(asctime)s %(levelname)10s %(process)6d  %(filename)-24s  %(lineno)4d: %(message)s', '%d/%m/%Y %I:%M:%S %p')
 fh = logging.FileHandler(f'triage_{now}.log', mode='w')
 fh.setFormatter(formatter)
@@ -51,8 +51,8 @@ db_url = URL(
 db_engine = create_engine(db_url)
 
 # loading config file
-config_file = 'donors-choose-config.yaml'
-#config_file = 'donors-choose-config-small.yaml'
+#config_file = 'donors-choose-config.yaml'
+config_file = 'donors-choose-config-small.yaml'
 with open(config_file, 'r') as fin:
     config = yaml.safe_load(fin)
 
@@ -72,7 +72,7 @@ visualize_chops(chopper, save_target = 'triage_output/timechop.png')
 experiment = MultiCoreExperiment(
     config = config,
     db_engine = db_engine,
-    project_path = 's3://cmu-dsapp-education/donors-choose',
+    project_path = 's3://dsapp-education-migrated/donors-choose',
     n_processes=4,
     n_db_processes=2,
     replace=False,
@@ -82,7 +82,7 @@ experiment = MultiCoreExperiment(
 # experiment = SingleThreadedExperiment(
 #     config = config,
 #     db_engine = db_engine,
-#     project_path = 's3://cmu-dsapp-education/donors-choose',
+#     project_path = 's3://dsapp-education-migrated/donors-choose',
 #     replace=False,
 #     save_predictions=False
 # )
@@ -91,10 +91,10 @@ experiment = MultiCoreExperiment(
 def generate_experiment_report():
 
     # Path to where you save the notebook template in 
-    template_path = '/notebooks/triage_experiment_report_template.ipynb'
+    template_path = './notebooks/experiment_summary_report_template.ipynb'
 
     # Specify where you will save the executed notebook (recommend not to overwrite the template)
-    output_path = '/notebooks/experiment_summary_report.ipynb'
+    output_path = './notebooks/experiment_summary_report.ipynb'
 
     shutil.copyfile(template_path, output_path)
 
