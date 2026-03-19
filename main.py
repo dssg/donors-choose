@@ -85,10 +85,9 @@ experiment = MultiCoreExperiment(
 # experiment = SingleThreadedExperiment(
 #     config = config,
 #     db_engine = db_engine,
-#     # project_path = 's3://dsapp-education-migrated/donors-choose',
-#     project_path = '/mnt/data/projects/donors_choose/sqlalchemy_2/triage_output/',
-#     replace=False,
-#     save_predictions=True
+#     project_path = 's3://dsapp-education-migrated/donors-choose',
+#     replace=True,
+#     save_predictions=False
 # )
 
 # Creating the Triage experiment Report
