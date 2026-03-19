@@ -4,7 +4,8 @@ import logging
 import shutil
 
 from datetime import datetime 
-from sqlalchemy.engine.url import URL
+from sqlalchemy.engine import URL
+#from sqlalchemy.engine.url import URL
 from sqlalchemy.pool import NullPool
 
 from triage.util.db import create_engine
@@ -18,41 +19,43 @@ from triage.experiments import MultiCoreExperiment, SingleThreadedExperiment
 # os.chdir('donors-choose')
 now = datetime.now()
 logger = logging.getLogger()
-logger.setLevel(logging.INFOP)
+logger.setLevel(logging.INFO)
 formatter = logging.Formatter('%(name)-30s  %(asctime)s %(levelname)10s %(process)6d  %(filename)-24s  %(lineno)4d: %(message)s', '%d/%m/%Y %I:%M:%S %p')
 fh = logging.FileHandler(f'triage_{now}.log', mode='w')
 fh.setFormatter(formatter)
 logger.addHandler(fh)
 
-# creating database engine
-dbfile = 'database.yaml'
 
-with open(dbfile, "r") as f:
-    dbconfig = yaml.safe_load(f)
-
-db_url = URL(
-            'postgres',
-            host=dbconfig['host'],
-            username=dbconfig['user'],
-            database=dbconfig['db'],
-            password=dbconfig['pass'],
-            port=dbconfig['port'],
+# creating db engine
+## check if credentials are stored as environment variables or on yaml file.
+environment_variable = os.getenv('PGUSER')
+if environment_variable is not None: 
+    db_url = URL.create(
+            'postgresql+psycopg2',
+            host=os.getenv('PGHOST'),
+            username=os.getenv('PGUSER'),
+            database=os.getenv('PGDATABASE'),
+            password=os.getenv('PGPASSWORD'),
+            port=5432,
         )
+## db credentials not setup on environment variables
+else: 
+    with open("database.yaml", "r") as f:
+        config = yaml.safe_load(f)
 
-# db_url = URL(
-#     'postgres',
-#     host=os.getenv('PGHOST'),
-#     username=os.getenv('PGUSER'),
-#     database=os.getenv('PGDATABASE'),
-#     password=os.getenv('PGPASSWORD'),
-#     port=os.getenv('PGPORT'),
-# )
+    db_url = URL.create(
+                'postgresql+psycopg2',
+                host=config['host'],
+                username=config['user'],
+                password=config['pass'],
+                database=config['db'],
+                port=config['port']
+            )
 
 db_engine = create_engine(db_url)
 
 # loading config file
-#config_file = 'donors-choose-config.yaml'
-config_file = 'donors-choose-config-small.yaml'
+config_file = 'donors-choose-config.yaml'
 with open(config_file, 'r') as fin:
     config = yaml.safe_load(fin)
 
@@ -68,23 +71,24 @@ chopper.feature_start_time = chopper.label_start_time
 visualize_chops(chopper, save_target = 'triage_output/timechop.png')
 
 # creating experiment object
-
+## Multi core
 experiment = MultiCoreExperiment(
     config = config,
     db_engine = db_engine,
     project_path = 's3://dsapp-education-migrated/donors-choose',
-    n_processes=4,
+    n_processes=2,
     n_db_processes=2,
-    replace=False,
+    replace=True,
     save_predictions=False
 )
-
+# If single threaded, uncomment the following lines
 # experiment = SingleThreadedExperiment(
 #     config = config,
 #     db_engine = db_engine,
-#     project_path = 's3://dsapp-education-migrated/donors-choose',
+#     # project_path = 's3://dsapp-education-migrated/donors-choose',
+#     project_path = '/mnt/data/projects/donors_choose/sqlalchemy_2/triage_output/',
 #     replace=False,
-#     save_predictions=False
+#     save_predictions=True
 # )
 
 # Creating the Triage experiment Report
@@ -94,7 +98,7 @@ def generate_experiment_report():
     template_path = './notebooks/experiment_summary_report_template.ipynb'
 
     # Specify where you will save the executed notebook (recommend not to overwrite the template)
-    output_path = './notebooks/experiment_summary_report.ipynb'
+    output_path = f'./notebooks/experiment_summary_report_{now.strftime("%Y%m%d")}.ipynb'
 
     shutil.copyfile(template_path, output_path)
 

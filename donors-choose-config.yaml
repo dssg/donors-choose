@@ -1,7 +1,7 @@
 config_version: 'v8'
 
 model_comment: 'quickstart test run'
-random_seed: 1995
+random_seed: 250408
 
 temporal_config:
 
@@ -218,20 +218,20 @@ feature_aggregations:
       
 grid_config:
   'sklearn.ensemble.RandomForestClassifier':
-      n_estimators: [1000, 2500, 5000, 10000]
+      n_estimators: [1000, 2500, 5000]
       max_depth: [2, 5, 10, 50]
-      max_features: ['sqrt', 'auto', 'log2']
+      max_features: ['sqrt']
       min_samples_split: [2, 10, 25, 50]
 
   'triage.component.catwalk.estimators.classifiers.ScaledLogisticRegression':
       max_iter: [10000]
-      penalty: ['l1', 'l2']
-      C: [0.001, 0.01, 0.1, 0.5, 1, 2, 10]
+      penalty: ['l1']
+      C: [0.01, 0.1, 0.5, 1, 10]
       solver: ['saga']
 
   'sklearn.tree.DecisionTreeClassifier':
-      max_depth: [2, 5, 10, 50]
-      min_samples_split: [2, 10, 25, 50]
+      max_depth: [50]
+      min_samples_split: [25]
   
   'sklearn.dummy.DummyClassifier':
       # baseline, predicts base rate

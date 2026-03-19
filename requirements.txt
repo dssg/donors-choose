@@ -1,1 +1,1 @@
-triage==5.3.3
+triage
